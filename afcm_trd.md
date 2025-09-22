@@ -65,6 +65,17 @@
 
 > Charge currency = **NGN** (kobo). USD shown for display; Admin may set reference FX.
 
+### Event schedule & doors (TZ = Africa/Lagos)
+
+| Day | Date (2025) | Doors open | Doors close | Primary programming |
+| --- | --- | --- | --- | --- |
+| Day 1 | Tue **Sept 23** | 08:00 | 19:00 | Investor briefings, opening keynotes, evening welcome mixer |
+| Day 2 | Wed **Sept 24** | 08:00 | 19:00 | Deal rooms, curated buyer-seller meetings, private roundtables |
+| Day 3 | Thu **Sept 25** | 08:00 | 19:00 | Expo hall + booths showcase, ecosystem panels, product launches |
+| Day 4 | Fri **Sept 26** | 08:00 | 18:00 | Pitch finals, awards, closing reception |
+
+Event runtime is therefore **23–26 September 2025** (inclusive). All scheduling, ticket validity and ICS generation must use the `Africa/Lagos` timezone.
+
 ### B) Meetings
 
 1. Directory filter (role/company/interests/availability).
@@ -104,10 +115,19 @@
 
 ### Passes & orders
 
-* **pass\_products**: `id, sku (unique), name, days (1|2|3|4), price_kobo, price_usd_cents, is_early_bird bool, active bool`
+* **event\_settings** (singleton row): `id=1, event_start_date date, event_end_date date, timezone text`
+* **event\_days**: `id, day_offset smallint (0-based), event_date date, label, doors_open_at time, doors_close_at time`
+* **pass\_products**: `id, sku (unique), name, days (1|2|3|4), price_kobo, price_usd_cents, is_early_bird bool, active bool, valid_from_offset smallint, valid_through_offset smallint`
+  * Seed mapping (relative to **Day 1 = 23 Sept 2025**):
+    * `PASS-1D` → offsets `0…0` (Tue 23 Sept only).
+    * `PASS-2D` → offsets `0…1` (Tue 23 – Wed 24 Sept).
+    * `PASS-3D` → offsets `0…2` (Tue 23 – Thu 25 Sept).
+    * `PASS-4D` and `PASS-4D-EB` → offsets `0…3` (Tue 23 – Fri 26 Sept).
 * **attendees**: `id, user_id, badge_sku, status (UNPAID|PAID|REFUNDED), created_at`
 * **orders**: `id, attendee_id, badge_sku, currency (NGN|USD), amount bigint, paystack_reference?, paystack_invoice_code?, status (pending|paid|failed|refunded), created_at`
 * **tickets**: `id, attendee_id (unique), valid_dates daterange, qr_payload text, issued_at`
+
+`event_days` is seeded from the schedule in §3. Each pass SKU stores its deterministic inclusive range through the offset fields; there is no implicit “any day” logic. During ticket issuance, the system resolves the offsets into calendar dates using the singleton event setting (`event_start_date = 2025-09-23`, `event_end_date = 2025-09-26`, `timezone = 'Africa/Lagos'`) and stores the resulting contiguous `valid_dates` range on the ticket. ICS attachments for orders and passes must read `tickets.valid_dates` so regenerated ICS files always match the same date span irrespective of when or where they are produced.
 
 ### Meetings
 
