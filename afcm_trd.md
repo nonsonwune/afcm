@@ -79,8 +79,10 @@ Event runtime is therefore **23–26 September 2025** (inclusive). All schedulin
 ### B) Meetings
 
 1. Directory filter (role/company/interests/availability).
-2. Request → recipient Accept/Decline → upon accept, requester picks **30-min** slot & location (room/meetpoint/virtual).
-3. ICS to both parties; reminders at **T-24h** & **T-2h**; strict no overlap for **accepted** meetings.
+2. Requester sends meeting request (optionally with proposed windows).
+3. Recipient Accepts/Declines; acceptance locks the meeting as **accepted** but unscheduled.
+4. After acceptance, the **requester** selects the confirmed **30-min** slot & location (room/meetpoint/virtual).
+5. ICS goes out when the slot is set; reminders at **T-24h** & **T-2h**; strict no overlap for **accepted** meetings.
 
 ### C) Booths (no price online)
 
@@ -181,7 +183,7 @@ Event runtime is therefore **23–26 September 2025** (inclusive). All schedulin
 
 * `GET /directory?role=&q=&available=` — public profiles
 * `POST /meetings` — {recipient\_id, proposed\_windows?} → creates pending
-* `PATCH /meetings/:id` — accept/decline/cancel or set `{start_at,end_at,location_*}` when accepting
+* `PATCH /meetings/:id` — recipient Accept/Decline/Cancel via `{action: "accept"|"decline"|"cancel"}`; once accepted, requester schedules with `{action: "schedule", start_at, end_at, location_type, location_value}` (30-min window, required on schedule)
 * `GET /me/meetings`
 
 ### Booths & leads
