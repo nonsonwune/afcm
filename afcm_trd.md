@@ -76,7 +76,7 @@
 1. Page top: **Floor Plan image** (zoomable).
 2. Below: tabs by zone (A/B/C/D/F; E is info-only) + filter by status/size.
 3. Each booth card: **code**, **size** (default 3×3 m unless specified), **status** (`available/hold/allocated/hidden`), CTAs: **Call Sales** (tel:) and **Request Details** (lead form).
-4. Staff console: update statuses, set **hold expiry**, manage leads pipeline (`new → contacted → qualified → closed`), export CSV.
+4. Staff console: update statuses, set **hold expiry**, manage leads pipeline (`new → contacted → qualified → closed`), add internal notes surfaced on the lead detail pane and CSV export.
 
 ### D) Pitch Sessions (registered-only)
 
@@ -119,7 +119,7 @@
 ### Booths & leads
 
 * **booths**: `booth_code (PK), zone, width_m, depth_m, area_m2, status (available|hold|allocated|hidden) default 'available', hold_expires_at?, features jsonb, allocated_to_company_id?, notes`
-* **booth\_leads**: `id, booth_code, name, company, email, phone, message, status (new|contacted|qualified|closed) default 'new', assignee_id?, created_at, updated_at`
+* **booth\_leads**: `id, booth_code, name, company, email, phone, message, status (new|contacted|qualified|closed) default 'new', assignee_id?, notes text, created_at, updated_at`
 
 ### Pitch
 
@@ -174,7 +174,7 @@
 
 * `PATCH /staff/booths/:code/status` — {status, hold\_expires\_at?}
 * `POST /staff/booths/import` — CSV upload
-* `PATCH /staff/booth-leads/:id` — {status, assignee\_id?, note?}
+* `PATCH /staff/booth-leads/:id` — {status, assignee\_id?, notes?}
 * `GET /staff/exports/booth-leads.csv`
 * `GET /staff/meetings` (grid)
 * `PATCH /staff/pitch-applications/:id` — {status, timeslot\_start?, timeslot\_end?}
