@@ -1,249 +1,225 @@
-# EPIC 0 — Foundation / Project Skeleton (finish before Stage 1)
+# 0) Foundation (one-time setup before Module 1)
 
-**Repo & tooling**
+**0.1 Repo & tooling**
 
-* [ ] Init mono-repo or single app; set Node/PNPM versions; Prettier/ESLint/TypeScript strict.
-* [ ] Add `.env.example` with all keys (see ENV list below) and a safe `docker-compose` for local DB.
-* [ ] Configure CI (build, lint, typecheck).
+* [ ] Create mono-repo: `apps/web_flutter` (Flutter) + `supabase/` (SQL, Edge Functions).
+* [ ] Enable Flutter Web: `flutter config --enable-web`.
+* [ ] Add Flutter packages: `go_router`, `riverpod` (or `bloc`), `supabase_flutter`, `dio`, `intl`, `qr_flutter`, `flutter_web_plugins`, `url_launcher`.
+* [ ] Codegen: `build_runner`, `freezed`, `json_serializable` (models).
 
-**App shell & PWA**
+**0.2 Hosting & domains**
 
-* [ ] Create Next app shell, base layout, auth gates, error boundary.
-* [ ] Manifest + service worker; cache app shell + `/booths` + `/me/ticket`.
+* [ ] Supabase project (Postgres + storage + Edge Functions).
+* [ ] Flutter Web hosting (Vercel/Netlify/Firebase Hosting) + custom domain + SSL.
+* [ ] DNS for `api.afcm.app` (optional reverse proxy if you want a vanity hostname for Edge Functions).
 
-**Design system**
+**0.3 Secrets & environment**
 
-* [ ] Tailwind + shadcn/ui base theme; typography, buttons, inputs, badges, tabs, tables, dialogs, toast.
+* [ ] Store **server secrets only** in Supabase: `PAYSTACK_SECRET_KEY`, `RESEND_API_KEY or SMTP`, `QR_SECRET`, `TZ=Africa/Lagos`.
+* [ ] Flutter uses only public keys: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SITE_URL`.
 
-**RBAC & Auth**
+**0.4 Database & security**
 
-* [ ] Supabase Auth (email OTP or password) + server session.
-* [ ] `users`, `companies`, `staff_roles` tables + seed admin.
-* [ ] RLS policies: public read where needed, user-owns-their-stuff, staff write access.
+* [ ] Apply SQL migrations for **core schema** (users, staff roles, companies, audit logs).
+* [ ] Enable **RLS**; write policies (read-only for public lists; write for owners; staff gated by role).
+* [ ] Seed `event_settings` (2025-09-23 → 2025-09-26, TZ `Africa/Lagos`) and `event_days` (doors open/close).
+* [ ] Set up daily backups; logging; error tracking (Sentry or Supabase logs viewer).
 
-**Observability & Ops**
+**0.5 Flutter PWA shell**
 
-* [ ] Structured logger (request id), error tracking hook, health check route.
-* [ ] “Ops Dashboard” page (protected) to show pings, queue/counters.
+* [ ] App manifest, icons, service worker; cache: app shell, floor-plan image, `/me/ticket` data.
+* [ ] Global theme, typography, light/dark; responsive breakpoints (mobile ↔ desktop).
 
-**ENV (populate in Vercel/Supabase & local)**
+**Exit criteria (Foundation)**
 
-```
-PAYSTACK_SECRET_KEY=
-QR_SECRET=
-RESEND_API_KEY=  # or SMTP_URL/USER/PASS
-SITE_URL=https://<your-domain>
-TZ=Africa/Lagos
-SUPABASE_URL=
-SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE=
-```
-
-**Content**
-
-* [ ] Upload floor plan (WebP + PNG fallback) with alt text.
-* [ ] Static pages: Home, Agenda, Venue/FAQ/Contact.
-
-**Definition of Done (Epic 0)**
-
-* App deploys; PWA installs; sign-in works; RBAC gates pages; floor plan renders.
+* App boots at `https://your-domain`; Supabase connected; protected pages redirect to sign-in.
 
 ---
 
-# EPIC 1 — Registration & Pass Checkout (PASS)
+# Module 1 — **Registration & Pass Checkout (Paystack)**
 
-### DB & server
+**Backend (Supabase Edge Functions + SQL)**
 
-* [ ] Tables: `pass_products`, `attendees`, `orders`, `tickets`.
-* [ ] Seed `pass_products` (1D,2D,3D,4D, Early-Bird 4D).
-* [ ] Snapshot pricing logic (amount in **kobo**) at order creation.
-* [ ] Webhook route `/api/webhooks/paystack` with HMAC-SHA512 verify (raw body).
-* [ ] Verify invoice/transaction via Paystack API; idempotent state machine (`pending → paid`).
-* [ ] QR generator (HMAC-signed compact payload) + `tickets` insert.
-* [ ] ICS generator for access dates (TZID Africa/Lagos).
+* [ ] Tables: `pass_products`, `attendees`, `orders`, `tickets`, `notifications`.
+* [ ] Seed **passes** (1D, 2D, 3D, 4D, 4D-EB) with NGN prices; USD kept as display.
+* [ ] Function `create_order`:
 
-### API
+  * Validates selected `badge_sku`.
+  * Creates `attendees(UNPAID)` and `orders(pending)` with **amount snapshot** (kobo).
+  * Calls **Paystack Payment Request** (invoice) → stores `request_code`.
+  * Returns `{ order_id, message: 'Invoice sent' }`.
+* [ ] Webhook `paystack_webhook` (Edge Function):
 
-* [ ] `GET /passes`
-* [ ] `POST /orders` → creates attendee (UNPAID) + order (pending) + **Payment Request** (invoice) → returns “invoice sent”
-* [ ] `GET /me/ticket` → returns QR payload + ICS link
+  * Verify `X-Paystack-Signature` (HMAC-SHA512).
+  * `GET /paymentrequest/verify/:code` to confirm paid.
+  * **Idempotent**: set `orders.status='paid'`, `attendees.status='PAID'`.
+  * Issue **ticket**: generate signed QR payload; compute `valid_dates` from `pass_products` offsets + `event_days`.
+  * Send confirmation email with **QR image** + **ICS attachment**.
+* [ ] Cron jobs: abandon `orders(pending)` older than N hours.
 
-### UI
+**Flutter (screens & flows)**
 
-* [ ] `/passes` (grid) → `/register` form (name, email, phone, role, pass selection).
-* [ ] Post-submit screen: “Invoice sent” + resend link if needed.
-* [ ] Confirmation page + email with QR + ICS when webhook confirms.
-* [ ] `/me/ticket` page is offline-ready (cached).
+* [ ] **Passes** page → choose **role** & **pass** (Investor/Buyer/Seller/Attendee).
+* [ ] **Register** form (name, email, phone, company optional) → call `create_order`.
+* [ ] **Payment instructions** screen: “Invoice sent to your email” + “Resend invoice” button (calls Paystack notify).
+* [ ] **My Ticket** page: shows **QR**, pass name, valid dates, **Download ICS**, and offline availability.
+* [ ] “My Profile” shows role & attendee status (UNPAID/PAID).
 
-### Email
+**Ops**
 
-* [ ] Confirmation w/ QR + “Add to Calendar” ICS.
-* [ ] (Optional) If you use `transaction/initialize`: your own “Complete payment” email template.
+* [ ] DKIM/SPF for sender domain.
+* [ ] Email templates: Payment confirmation (QR + ICS).
 
-### QA & Ops
+**Exit criteria (Module 1)**
 
-* [ ] Duplicate webhook safe; one ticket per attendee guaranteed.
-* [ ] Abandoned orders cleanup cron.
-* [ ] Refund admin flow (manual) → sets states and sends receipt.
-
-**DoD (Epic 1)**
-
-* ✅ ≥95% of paid invoices reflect in app within 60s; ticket/QR issued once; ICS attaches; `/me/ticket` works offline.
+* A new user can register, receive Paystack invoice, pay, trigger webhook, receive **QR ticket + ICS**, and view ticket offline.
 
 ---
 
-# EPIC 2 — Meeting Scheduling & Management (MEET)
+# Module 2 — **Meeting Scheduling & Management**
 
-### DB
+**Backend**
 
 * [ ] Tables: `rooms`, `meetings`.
-* [ ] Optional seed: named rooms and basic capacity.
-* [ ] Constraint/guard: no overlapping **accepted** meetings per user.
+* [ ] Constraint/logic: prevent **overlap** on **accepted** meetings per user.
+* [ ] Edge Function APIs:
 
-### Server/API
+  * `directory_list`: search/filter users (role/company/interests).
+  * `meeting_request`: create `meetings(pending)`.
+  * `meeting_act`: recipient `{accept|decline}`; requester `{schedule}` with `{start_at, end_at, location_type, location_value}` (30-min slot).
+  * `meeting_list_me`: returns inbox/sent + calendar feed.
+  * All actions write to `audit_logs`.
+* [ ] Cron: **reminders** at T-24h & T-2h (email; optional SMS later).
+* [ ] ICS: send on accept/schedule/update/cancel.
 
-* [ ] `GET /directory?role=&q=&available=` (public profile list).
-* [ ] `POST /meetings` (create `pending` request).
-* [ ] `PATCH /meetings/:id` (accept/decline/cancel and, on accept, set `{start_at,end_at,location_type,location_value}`).
-* [ ] `GET /me/meetings` (my upcoming/past).
-* [ ] Cron: reminders T-24h & T-2h (email, optional SMS).
+**Flutter**
 
-### UI
+* [ ] **Directory** page: filters (role/company), profile cards, “Request meeting”.
+* [ ] **Meetings** page: tabs (Inbox/Sent/Calendar).
+* [ ] **Slot picker**: fixed 30-min grid within event days (09:00–18:00).
+* [ ] Toasts/status badges; guard rails (cannot double-book).
 
-* [ ] `/directory` with filters (role/company/interests).
-* [ ] `/meetings` inbox/sent, request modal, accept/decline actions.
-* [ ] When accepted: slot picker (fixed 30-min grid across event days/hours).
-* [ ] ICS send on accept/update/cancel.
+**Exit criteria (Module 2)**
 
-### QA
-
-* [ ] Overlap prevention tested; timezone safe (WAT everywhere).
-* [ ] Reminders fire; calendar files open in common clients.
-
-**DoD (Epic 2)**
-
-* ✅ Users can request/accept; no double-book; ICS + reminders work.
+* User A requests B → B accepts → A schedules slot → both get ICS → reminders fire.
+* No user can have two **accepted** meetings overlapping.
 
 ---
 
-# EPIC 3 — Booth Order Management (BOOTH)
+# Module 3 — **Booth Order Management (no pricing online)**
 
-### DB
+**Backend**
 
-* [ ] `booths` (PK: `booth_code`) with `zone,width_m,depth_m,area_m2,status,hold_expires_at,features,allocated_to_company_id`.
-* [ ] `booth_leads` (pipeline: `new → contacted → qualified → closed`).
-* [ ] Seed 43 booths (A1–A18, B1–B9, C1–C11, D1–D2, E, F1–F2). Default 3×3; refine sizes later.
+* [ ] Tables: `booths`, `booth_leads` (with `assignee_id`, `status workflow`, `notes`).
+* [ ] Seed **43 booths** (A1–A18, B1–B9, C1–C11, D1–D2, E, F1–F2) with 3×3 default and zone.
+* [ ] Edge Functions:
 
-### Server/API
+  * `booths_list`: filter by zone/status/size.
+  * `lead_create`: create lead; email sales; write audit trail.
+  * **Staff**: `booth_status_set` (status + hold expiry), `lead_update`, `booths_import_csv`, `leads_export_csv`.
+* [ ] Cron: expire holds at `hold_expires_at` → set to `available`.
 
-* [ ] `GET /booths?zone=&status=&size=`
-* [ ] `GET /booths/:code`
-* [ ] `POST /booth-leads`
-* [ ] Staff: `PATCH /staff/booths/:code/status` `{status,hold_expires_at?}`
-* [ ] Staff: `POST /staff/booths/import` (CSV) & `GET /staff/exports/booth-leads.csv`
-* [ ] Cron: expire holds → set `available`.
-* [ ] Audit logs on staff mutations.
+**Flutter**
 
-### UI (public)
+* [ ] **Booths** page: top = **floor plan image** (zoom/pan only). Below = tabs per zone; filters; **cards** with status chips + **Call Sales** (`tel:`) + **Request details** form.
+* [ ] **Staff console** (RBAC):
 
-* [ ] `/booths` page: floor plan **image** on top (zoomable, no hotspots).
-* [ ] Zone tabs (A/B/C/D/F; E info-only), filters, booth cards with **status**, **Call Sales (tel:)**, **Request Details** form.
+  * Booths table with inline status toggle & hold date picker.
+  * Leads pipeline view (`new → contacted → qualified → closed`), assignee, notes, export CSV.
 
-### UI (staff console — in-app or Appsmith)
+**Exit criteria (Module 3)**
 
-* [ ] Booth list with status dropdown, hold expiry set, allocate company optional.
-* [ ] Leads table with pipeline transitions, assignee, notes.
-
-### QA
-
-* [ ] Status changes reflect publicly <10s.
-* [ ] Holds expire automatically.
-* [ ] Leads contain booth\_code, are exportable.
-
-**DoD (Epic 3)**
-
-* ✅ Public sees 43 booths, can submit leads; staff can manage status/holds/leads; audit present.
+* Public page shows 43 items with correct zone counts; leads create records + email.
+* Staff can change booth statuses, set holds, and holds auto-expire.
 
 ---
 
-# EPIC 4 — Pitch Session Registration (PITCH)
+# Module 4 — **Pitch Sessions (registered-only)**
 
-### DB
+**Backend**
 
-* [ ] `pitch_sessions` (name, date, capacity, open\_from/to).
-* [ ] `pitch_applications` (user\_id, session\_id, title, logline, link, status, timeslot\_start/end).
+* [ ] Tables: `pitch_sessions`, `pitch_applications`.
+* [ ] Edge Functions:
 
-### Server/API
+  * `pitch_sessions_list` (public).
+  * `pitch_apply` (requires `attendees.status='PAID'`).
+  * **Staff**: `pitch_review` `{approve|decline|waitlist}`; set `{timeslot_start, timeslot_end}`; email ICS to presenter.
+  * Capacity enforcement; FIFO waitlist.
 
-* [ ] `GET /pitch-sessions`
-* [ ] `POST /pitch-applications` (guard: user has **PAID** ticket).
-* [ ] Staff: `PATCH /pitch-applications/:id` `{status, timeslot_start, timeslot_end}`
-* [ ] ICS send to presenter on approve/slot assign.
+**Flutter**
 
-### UI
+* [ ] **Pitch** page: list sessions (date, capacity).
+* [ ] **Apply** form (title, logline, optional link).
+* [ ] **My Applications** page (statuses, timeslot if approved).
+* [ ] **Staff** pitch panel: approvals, slot assign, bulk email.
 
-* [ ] `/pitch` list + apply form (disable if not PAID).
-* [ ] My Applications list; status badges.
-* [ ] Staff page to approve/decline and assign slots.
+**Exit criteria (Module 4)**
 
-### QA
-
-* [ ] Capacity respected; waitlist is FIFO by submission timestamp.
-* [ ] ICS details/timezone correct.
-
-**DoD (Epic 4)**
-
-* ✅ Only PAID users can apply; approvals send ICS with slot; waitlist behaves.
+* Only **PAID** users can apply; approvals assign times; ICS sent; waitlist respected.
 
 ---
 
-# EPIC 5 — Hardening, UAT, & Launch
+# Cross-cutting hardening (after all modules)
 
-**Security & compliance**
+**A) RBAC & RLS checks**
 
-* [ ] Rate limits on auth and `booth-leads` form.
-* [ ] CSRF where applicable; secrets never leak to client.
-* [ ] Data export/delete flows (admin-mediated).
-* [ ] Access logs and audit review.
+* [ ] Verify every mutating endpoint: public users can’t touch staff routes; staff roles honored.
+* [ ] Add rate limits on auth, lead creation, meeting requests.
 
-**Performance**
+**B) PWA polish**
 
-* [ ] First load P95 ≤ 3s on 3G-fast; images compressed; cache headers sane.
-* [ ] DB indexes in place (`meetings.start_at`, `orders.status`, `booths.status`).
+* [ ] “Update available” toast on new service worker.
+* [ ] Offline fallbacks: ticket, floor plan, agenda.
+* [ ] Lighthouse: PWA installable, performance budget green.
 
-**Monitoring**
+**C) Observability & ops**
 
-* [ ] Dashboards: orders/day, webhook success %, meetings volume, lead pipeline.
-* [ ] Incident runbook: webhook retry, manual reconcile, refund procedure.
+* [ ] Dashboards: orders/day, webhook success rate, meetings/day, leads pipeline stats.
+* [ ] Alerts on webhook failures and cron errors.
 
-**UAT script**
+**D) QA & E2E**
 
-* [ ] Pass purchase path (invoice → webhook → ticket/QR).
-* [ ] Meetings flow (req/accept/slot/ICS/reminders).
-* [ ] Booth lead + staff pipeline + hold expiry.
-* [ ] Pitch apply → approve → ICS.
-
-**Go/No-Go**
-
-* [ ] Checklists green; backups configured; staff trained on console.
+* [ ] E2E scripts per module (happy paths + edge cases).
+* [ ] Load smoke: 300 concurrent directory views, 30 RPS meetings, 20/min webhook bursts.
 
 ---
 
-## Deliverables per epic (for Jira “Definition of Done”)
+## Flutter app routes (suggested)
 
-* **PASS:** schema/migrations, seed passes, endpoints, webhook, QR & ICS, UI `/register` + `/me/ticket`, confirmation email, tests.
-* **MEET:** schema, endpoints, directory & meetings UI, ICS/reminders cron, tests.
-* **BOOTH:** schema/seed, public page & forms, staff console, cron expiry, exports, tests.
-* **PITCH:** schema, endpoints, public & staff UIs, ICS on approve, tests.
-* **HARDEN:** rate limits, RLS checks, perf budget, dashboards, runbook, UAT sign-off.
+```
+/passes
+/register
+/me/ticket
+/directory
+/meetings
+/booths
+/pitch
+/staff/booths
+/staff/pitch
+```
+
+Use `go_router` with guards:
+
+* Auth guard on `/me/*`, `/meetings`, `/pitch`.
+* Staff guard on `/staff/*`.
 
 ---
 
-## Nice-to-add later (doesn’t block MVP)
+## Deliverables per module
 
-* Two-way calendar sync (Google/Microsoft).
-* SVG booth hotspots.
-* Sponsor placements & analytics.
-* Multi-currency checkout (if Paystack USD enabled).
+* **Module 1**: Live pass sales, invoice flow, webhook, tickets (QR), ICS, offline ticket.
+* **Module 2**: Directory + scheduling with 30-min slots, ICS + reminders, overlap protection.
+* **Module 3**: Floor plan image + booth list, lead funnel, staff console, hold expiry.
+* **Module 4**: Pitch sessions, registered-only apply, approvals & slots, ICS to presenters.
+
+---
+
+## Notes on Dart/Flutter specifics
+
+* Turn on `webRenderers` (html/canvaskit) and test both; use **canvaskit** for smoother animations if bundle size is acceptable.
+* For PWA icons/manifest: `flutter create .` generates defaults—edit `web/manifest.json` and `web/icons/`.
+* Supabase client: `supabase_flutter` handles auth/session persist; use **Edge Functions** for all server secrets.
+* Generate QR with `qr_flutter` (renders CanvasKit fast on web).
+* File downloads (ICS): provide a signed URL to an Edge Function that streams the file or build ICS string on client and trigger download.
 
 ---
