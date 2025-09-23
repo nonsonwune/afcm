@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta content="IE=Edge" http-equiv="X-UA-Compatible" />
+    <meta name="description" content="AFCM event experience platform" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AFCM Event</title>
+    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" type="image/svg+xml" href="icons/app_icon.svg" />
+    <meta name="theme-color" content="#005D5D" />
+    <script>
+      const registerServiceWorker = () => {
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker
+            .register('pwa_service_worker.js')
+            .catch((error) => console.error('Service worker registration failed', error));
+        }
+      };
+      window.addEventListener('load', registerServiceWorker);
+    </script>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="flutter_bootstrap"></div>
+    <script src="flutter.js" defer></script>
+  </body>
+</html>
