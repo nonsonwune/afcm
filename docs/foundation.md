@@ -31,6 +31,7 @@ This document tracks the one-time foundation setup before Module 1 and captures 
 - Seed data establishes event dates (2025-09-23 → 2025-09-26 in `Africa/Lagos`) and door open/close windows.
 - Supabase backups should run daily during the event, and logging/error tracking should be enabled (e.g., Sentry integration).
 
+
 ### Module 1 Registration Schema (In Progress)
 
 - `migrations/00000000000200_module1_registration.sql` introduces `pass_products`, `attendees`, `orders`, `tickets`, and `notifications` along with supporting stored procedures (`create_attendee_order`, `pass_valid_dates`) and range consistency triggers.
@@ -39,6 +40,7 @@ This document tracks the one-time foundation setup before Module 1 and captures 
   - `create-order` validates a selected pass SKU, synchronises the caller’s profile, creates the attendee/order, and issues a Paystack Payment Request invoice.
   - `paystack-webhook` validates HMAC signatures, verifies invoices with Paystack, marks orders as paid, generates QR tickets (using the documented payload structure), and queues ticket notification jobs.
 - Environment expectations for Module 1 server flows now include `SUPABASE_SERVICE_ROLE_KEY`, `PAYSTACK_SECRET_KEY`, and `QR_SECRET` (see `supabase/.env.example`).
+
 
 ## Flutter PWA Shell
 
