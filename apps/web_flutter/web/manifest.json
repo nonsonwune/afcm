@@ -1,0 +1,18 @@
+{
+  "name": "AFCM Event",
+  "short_name": "AFCM",
+  "description": "Progressive web application for the AFCM event.",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#005D5D",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icons/app_icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

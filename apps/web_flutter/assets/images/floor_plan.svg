@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-labelledby="title desc">
+  <title id="title">AFCM Expo Floor Plan Placeholder</title>
+  <desc id="desc">Simplified zone layout showing booth groups A through F.</desc>
+  <defs>
+    <style type="text/css"><![CDATA[
+      .zone-label { font: 32px 'Roboto', 'Helvetica Neue', Arial, sans-serif; font-weight: 600; fill: #0b3954; }
+      .zone-rect { fill: #a7d8de; stroke: #0b3954; stroke-width: 4; rx: 12; ry: 12; }
+      .zone-rect.alt { fill: #f0b67f; }
+      .zone-rect.highlight { fill: #d6f5d6; }
+      .legend-box { fill: #ffffff; stroke: #0b3954; stroke-width: 3; rx: 8; ry: 8; }
+      .legend-label { font: 24px 'Roboto', 'Helvetica Neue', Arial, sans-serif; fill: #0b3954; }
+    ]]></style>
+  </defs>
+  <rect width="1200" height="800" fill="#f7fbfc" />
+  <g transform="translate(60,60)">
+    <rect class="zone-rect" x="0" y="0" width="500" height="260" />
+    <text class="zone-label" x="250" y="145" text-anchor="middle">Zone A • 18 booths</text>
+
+    <rect class="zone-rect alt" x="640" y="0" width="380" height="200" />
+    <text class="zone-label" x="830" y="115" text-anchor="middle">Zone B • 9 booths</text>
+
+    <rect class="zone-rect highlight" x="0" y="320" width="420" height="220" />
+    <text class="zone-label" x="210" y="435" text-anchor="middle">Zone C • 11 booths</text>
+
+    <rect class="zone-rect" x="470" y="320" width="260" height="160" />
+    <text class="zone-label" x="600" y="405" text-anchor="middle">Zone D • 2 booths</text>
+
+    <rect class="zone-rect alt" x="770" y="260" width="250" height="150" />
+    <text class="zone-label" x="895" y="345" text-anchor="middle">Zone E • Feature</text>
+
+    <rect class="zone-rect highlight" x="770" y="450" width="250" height="150" />
+    <text class="zone-label" x="895" y="535" text-anchor="middle">Zone F • 2 booths</text>
+
+    <rect class="zone-rect" x="0" y="580" width="1020" height="100" />
+    <text class="zone-label" x="510" y="645" text-anchor="middle">Networking lounge, registration &amp; café</text>
+  </g>
+  <g transform="translate(900,600)">
+    <rect class="legend-box" x="0" y="0" width="260" height="140" />
+    <text class="legend-label" x="130" y="50" text-anchor="middle">Scale-free placeholder</text>
+    <text class="legend-label" x="130" y="90" text-anchor="middle">Replace with final CAD export</text>
+  </g>
+</svg>
