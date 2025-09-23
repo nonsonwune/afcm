@@ -35,3 +35,12 @@ This repository hosts the AFCM event progressive web application and Supabase ba
    ```
 
 See [`docs/foundation.md`](docs/foundation.md) for detailed module planning.
+
+## Module 1 Backend Progress
+
+- Registration schema migration `00000000000200_module1_registration.sql` adds pass catalogues, attendee/order state, tickets, and outbound notifications with RLS policies.
+- Seed script `00000000000200_seed_passes.sql` loads the five launch passes with NGN pricing snapshots.
+- Supabase Edge Functions:
+  - `create-order` (authenticated) orchestrates attendee/order creation and Paystack Payment Request invoices.
+  - `paystack-webhook` handles Paystack callbacks, verifies signatures/status, issues QR tickets, and queues notification jobs.
+- Ensure local `.env` files define `SUPABASE_SERVICE_ROLE_KEY`, `PAYSTACK_SECRET_KEY`, and `QR_SECRET` before serving the functions.
