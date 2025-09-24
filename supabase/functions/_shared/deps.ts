@@ -8,6 +8,6 @@ export type {
 } from 'https://esm.sh/@supabase/supabase-js@2.45.1';
 export { Resend } from 'https://esm.sh/resend@3.2.0';
 export { default as dayjs } from 'https://esm.sh/dayjs@1.11.11';
-export dayjsUtcPlugin from 'https://esm.sh/dayjs@1.11.11/plugin/utc.js';
-export dayjsTimezonePlugin from 'https://esm.sh/dayjs@1.11.11/plugin/timezone.js';
+export { default as dayjsUtcPlugin } from 'https://esm.sh/dayjs@1.11.11/plugin/utc.js';
+export { default as dayjsTimezonePlugin } from 'https://esm.sh/dayjs@1.11.11/plugin/timezone.js';
 export * as QRCode from 'https://esm.sh/qrcode@1.5.3';
