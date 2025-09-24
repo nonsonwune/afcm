@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 import '../../router/app_router.dart';
@@ -51,8 +52,12 @@ class RegistrationStatusPage extends ConsumerWidget {
                   Row(
                     children: [
                       CircleAvatar(
-                        backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.15),
-                        child: Icon(Icons.check, color: Theme.of(context).colorScheme.primary),
+                        backgroundColor: Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withOpacity(0.15),
+                        child: Icon(Icons.check,
+                            color: Theme.of(context).colorScheme.primary),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
@@ -74,9 +79,14 @@ class RegistrationStatusPage extends ConsumerWidget {
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 8),
-                  const _StepBullet(text: 'Check your inbox for the Paystack invoice (including spam/junk).'),
-                  const _StepBullet(text: 'Complete payment securely via Paystack.'),
-                  const _StepBullet(text: 'Once confirmed, we will email your QR ticket and calendar invite automatically.'),
+                  const _StepBullet(
+                      text:
+                          'Check your inbox for the Paystack invoice (including spam/junk).'),
+                  const _StepBullet(
+                      text: 'Complete payment securely via Paystack.'),
+                  const _StepBullet(
+                      text:
+                          'Once confirmed, we will email your QR ticket and calendar invite automatically.'),
                   const SizedBox(height: 24),
                   Wrap(
                     spacing: 16,
@@ -90,12 +100,15 @@ class RegistrationStatusPage extends ConsumerWidget {
                         label: const Text('Open Paystack invoice'),
                       ),
                       OutlinedButton(
-                        onPressed: isLoading ? null : () => _resendInvoice(context, ref, args),
+                        onPressed: isLoading
+                            ? null
+                            : () => _resendInvoice(context, ref, args),
                         child: isLoading
                             ? const SizedBox(
                                 width: 18,
                                 height: 18,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
                               )
                             : const Text('Resend invoice email'),
                       ),
@@ -105,13 +118,15 @@ class RegistrationStatusPage extends ConsumerWidget {
                   Card(
                     elevation: 0,
                     color: Theme.of(context).colorScheme.surfaceVariant,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
                     child: Padding(
                       padding: const EdgeInsets.all(24),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Need help?', style: Theme.of(context).textTheme.titleMedium),
+                          Text('Need help?',
+                              style: Theme.of(context).textTheme.titleMedium),
                           const SizedBox(height: 8),
                           const Text(
                             'If you do not receive the invoice within a few minutes, tap “Resend invoice” or contact tickets@afcm.market.',
@@ -143,10 +158,13 @@ class RegistrationStatusPage extends ConsumerWidget {
     );
 
     try {
-      await ref.read(registrationControllerProvider.notifier).resendInvoice(payload);
+      await ref
+          .read(registrationControllerProvider.notifier)
+          .resendInvoice(payload);
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invoice resent. Check your email again.')),
+        const SnackBar(
+            content: Text('Invoice resent. Check your email again.')),
       );
     } catch (error) {
       if (!context.mounted) return;

@@ -33,4 +33,3 @@ class TicketLocalStore {
     await _prefs.remove(_key);
   }
 }
-

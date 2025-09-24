@@ -55,7 +55,8 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                   controller: _emailController,
                   enabled: !_codeSent,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(labelText: 'Email address *'),
+                  decoration:
+                      const InputDecoration(labelText: 'Email address *'),
                 ),
                 const SizedBox(height: 16),
                 if (_codeSent)
@@ -63,13 +64,17 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                     controller: _otpController,
                     maxLength: 6,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: '6-digit code *'),
+                    decoration:
+                        const InputDecoration(labelText: '6-digit code *'),
                   ),
                 const SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton(
-                    onPressed: _isLoading ? null : () => _codeSent ? _verifyOtp() : _sendOtp(config.siteUrl),
+                    onPressed: _isLoading
+                        ? null
+                        : () =>
+                            _codeSent ? _verifyOtp() : _sendOtp(config.siteUrl),
                     child: _isLoading
                         ? const SizedBox(
                             width: 20,
@@ -84,12 +89,15 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                     padding: const EdgeInsets.only(top: 16),
                     child: Text(
                       _feedback!,
-                      style: TextStyle(color: Theme.of(context).colorScheme.primary),
+                      style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary),
                     ),
                   ),
                 if (_codeSent)
                   TextButton(
-                    onPressed: _isLoading ? null : () => _sendOtp(config.siteUrl, resend: true),
+                    onPressed: _isLoading
+                        ? null
+                        : () => _sendOtp(config.siteUrl, resend: true),
                     child: const Text('Resend code'),
                   ),
               ],
@@ -114,7 +122,9 @@ class _SignInPageState extends ConsumerState<SignInPage> {
       await ref.read(authRepositoryProvider).signInWithEmail(email: email);
       setState(() {
         _codeSent = true;
-        _feedback = resend ? 'Code resent. Check your inbox.' : 'Code sent. Please check your email.';
+        _feedback = resend
+            ? 'Code resent. Check your inbox.'
+            : 'Code sent. Please check your email.';
       });
     } catch (error) {
       setState(() => _feedback = 'Unable to send code: $error');
@@ -135,7 +145,9 @@ class _SignInPageState extends ConsumerState<SignInPage> {
       _feedback = null;
     });
     try {
-      await ref.read(authRepositoryProvider).verifyEmailOtp(email: email, token: otp);
+      await ref
+          .read(authRepositoryProvider)
+          .verifyEmailOtp(email: email, token: otp);
       await ref.read(ticketRepositoryProvider).claimAttendeeRecords(email);
       if (!mounted) return;
       context.goNamed(AppRoute.profile.name);
@@ -146,4 +158,3 @@ class _SignInPageState extends ConsumerState<SignInPage> {
     }
   }
 }
-

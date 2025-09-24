@@ -63,4 +63,3 @@ class ConfigurationErrorApp extends StatelessWidget {
     );
   }
 }
-

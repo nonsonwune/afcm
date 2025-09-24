@@ -12,4 +12,3 @@ final passCatalogueProvider = FutureProvider((ref) async {
   final repository = ref.watch(passRepositoryProvider);
   return repository.fetchActivePasses();
 });
-

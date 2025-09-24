@@ -9,7 +9,7 @@
      PAYSTACK_PUBLIC_KEY=pk_test_2e3086f562f602b292b5b27ea534a2ddd04c91df \
      RESEND_API_KEY=... \
      QR_SECRET=choose-a-secret \
-     SITE_URL=https://your-preview-domain \
+     SITE_URL=https://afcm-web.vercel.app \
      TZ=Africa/Lagos \
      EMAIL_FROM="AFCM Tickets <tickets@afcm.market>"
    ```

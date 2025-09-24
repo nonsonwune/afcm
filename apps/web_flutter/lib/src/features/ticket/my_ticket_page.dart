@@ -28,7 +28,8 @@ class MyTicketPage extends ConsumerWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text('Sign in with the email you used during registration to view your ticket.'),
+              const Text(
+                  'Sign in with the email you used during registration to view your ticket.'),
               const SizedBox(height: 16),
               FilledButton(
                 onPressed: () => context.goNamed(AppRoute.signIn.name),
@@ -59,7 +60,9 @@ class MyTicketPage extends ConsumerWidget {
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(ticketProvider);
-          await ref.read(ticketProvider.future).timeout(const Duration(seconds: 10));
+          await ref
+              .read(ticketProvider.future)
+              .timeout(const Duration(seconds: 10));
         },
         child: ticketAsync.when(
           loading: () => const _LoadingState(),
@@ -129,7 +132,8 @@ class _TicketCard extends StatelessWidget {
           children: [
             Text('AFCM 2025', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 4),
-            Text(ticket.passName, style: Theme.of(context).textTheme.headlineMedium),
+            Text(ticket.passName,
+                style: Theme.of(context).textTheme.headlineMedium),
             const SizedBox(height: 24),
             Center(
               child: Container(
@@ -148,7 +152,8 @@ class _TicketCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            Text('Serial: ${ticket.serialNumber}', style: const TextStyle(fontWeight: FontWeight.w600)),
+            Text('Serial: ${ticket.serialNumber}',
+                style: const TextStyle(fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
             Text('Valid from: $validFrom'),
             Text('Valid until: $validTo'),
@@ -156,7 +161,9 @@ class _TicketCard extends StatelessWidget {
             Row(
               children: [
                 FilledButton.icon(
-                  onPressed: ticket.icsBase64 == null ? null : () => _downloadIcs(ticket),
+                  onPressed: ticket.icsBase64 == null
+                      ? null
+                      : () => _downloadIcs(ticket),
                   icon: const Icon(Icons.calendar_month),
                   label: const Text('Add to calendar'),
                 ),
@@ -181,11 +188,11 @@ class _TicketCard extends StatelessWidget {
     }
     final bytes = base64Decode(base64Data);
     final blob = html.Blob([bytes], 'text/calendar');
-    final url = html.Url.createObjectURL(blob);
+    final url = html.Url.createObjectUrlFromBlob(blob);
     final anchor = html.AnchorElement(href: url)
       ..download = 'afcm-ticket.ics'
       ..click();
-    html.Url.revokeObjectURL(url);
+    html.Url.revokeObjectUrl(url);
   }
 
   void _copyPayload(BuildContext context, Ticket ticket) {

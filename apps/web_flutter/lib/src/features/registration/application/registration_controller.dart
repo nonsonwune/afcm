@@ -9,7 +9,8 @@ final registrationRepositoryProvider = Provider<RegistrationRepository>((ref) {
   return RegistrationRepository(client);
 });
 
-class RegistrationController extends StateNotifier<AsyncValue<CreateOrderResult?>> {
+class RegistrationController
+    extends StateNotifier<AsyncValue<CreateOrderResult?>> {
   RegistrationController(this._repository) : super(const AsyncValue.data(null));
 
   final RegistrationRepository _repository;
@@ -39,9 +40,8 @@ class RegistrationController extends StateNotifier<AsyncValue<CreateOrderResult?
   }
 }
 
-final registrationControllerProvider =
-    StateNotifierProvider<RegistrationController, AsyncValue<CreateOrderResult?>>((ref) {
+final registrationControllerProvider = StateNotifierProvider<
+    RegistrationController, AsyncValue<CreateOrderResult?>>((ref) {
   final repository = ref.watch(registrationRepositoryProvider);
   return RegistrationController(repository);
 });
-

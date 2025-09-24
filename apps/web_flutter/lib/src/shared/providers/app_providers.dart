@@ -5,4 +5,3 @@ import '../../app_config.dart';
 final appConfigProvider = Provider<AppConfig>((ref) {
   return AppConfig.fromEnvironment();
 });
-

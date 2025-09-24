@@ -26,4 +26,3 @@ class RegistrationSuccessArgs {
   final String fullName;
   final String role;
 }
-

@@ -3,6 +3,7 @@
 .packages
 .pub-cache/
 build/
+**/build/
 flutter_*.log
 .dart_tool_gen/
 
@@ -22,9 +23,13 @@ node_modules/
 supabase/.secrets/
 apps/web_flutter/.env
 apps/web_flutter/.env.*
+.vercel/
+apps/web_flutter/.flutter-plugins*
+apps/web_flutter/.dart_tool/
+apps/web_flutter/.metadata
+apps/web_flutter/.packages
 
 # IDE
 .vscode/
 .idea/
 *.iml
-

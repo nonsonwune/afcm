@@ -9,7 +9,8 @@ import '../../shared/providers/repository_providers.dart';
 import '../auth/application/auth_providers.dart';
 import '../registration/models/registration_flow.dart';
 
-final _selectedRoleProvider = StateProvider.autoDispose<String>((ref) => 'investor');
+final _selectedRoleProvider =
+    StateProvider.autoDispose<String>((ref) => 'investor');
 
 class PassesPage extends ConsumerWidget {
   const PassesPage({super.key});
@@ -56,7 +57,8 @@ class PassesPage extends ConsumerWidget {
               builder: (context, constraints) {
                 final isWide = constraints.maxWidth > 840;
                 return SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
                   child: Center(
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 960),
@@ -76,8 +78,9 @@ class PassesPage extends ConsumerWidget {
                                   (role) => ChoiceChip(
                                     label: Text(role['label']!),
                                     selected: selectedRole == role['value'],
-                                    onSelected: (_) =>
-                                        ref.read(_selectedRoleProvider.notifier).state = role['value']!,
+                                    onSelected: (_) => ref
+                                        .read(_selectedRoleProvider.notifier)
+                                        .state = role['value']!,
                                   ),
                                 )
                                 .toList(),
@@ -86,7 +89,8 @@ class PassesPage extends ConsumerWidget {
                           GridView.builder(
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
-                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: isWide ? 2 : 1,
                               mainAxisSpacing: 20,
                               crossAxisSpacing: 20,
@@ -101,7 +105,8 @@ class PassesPage extends ConsumerWidget {
                                 onTap: () {
                                   context.pushNamed(
                                     AppRoute.register.name,
-                                    extra: RegistrationFlowArgs(pass: pass, role: selectedRole),
+                                    extra: RegistrationFlowArgs(
+                                        pass: pass, role: selectedRole),
                                   );
                                 },
                               );
@@ -157,14 +162,17 @@ class _PassCard extends StatelessWidget {
                 ),
                 if (pass.isEarlyBird)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.orange.shade100,
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(
                       'Early Bird',
-                      style: TextStyle(color: Colors.orange.shade800, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                          color: Colors.orange.shade800,
+                          fontWeight: FontWeight.bold),
                     ),
                   ),
               ],
@@ -172,10 +180,9 @@ class _PassCard extends StatelessWidget {
             const SizedBox(height: 12),
             Text(
               nairaFormat.format(pass.amountNaira),
-              style: Theme.of(context)
-                  .textTheme
-                  .headlineMedium
-                  ?.copyWith(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold),
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.bold),
             ),
             if (usdDisplay != null)
               Padding(
@@ -197,7 +204,8 @@ class _PassCard extends StatelessWidget {
               width: double.infinity,
               child: FilledButton(
                 onPressed: onTap,
-                child: Text('Register as ${role[0].toUpperCase()}${role.substring(1)}'),
+                child: Text(
+                    'Register as ${role[0].toUpperCase()}${role.substring(1)}'),
               ),
             ),
           ],

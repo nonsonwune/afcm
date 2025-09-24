@@ -45,4 +45,3 @@ class AfcmApp extends ConsumerWidget {
     );
   }
 }
-

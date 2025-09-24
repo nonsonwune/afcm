@@ -55,4 +55,3 @@ class CreateOrderResult {
   final String hostedLink;
   final String? pdfUrl;
 }
-

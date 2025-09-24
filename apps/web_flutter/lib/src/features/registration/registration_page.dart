@@ -84,7 +84,8 @@ class _RegistrationPageState extends ConsumerState<RegistrationPage> {
                         flex: 3,
                         child: Card(
                           elevation: 2,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16)),
                           child: Padding(
                             padding: const EdgeInsets.all(24),
                             child: Form(
@@ -94,25 +95,33 @@ class _RegistrationPageState extends ConsumerState<RegistrationPage> {
                                 children: [
                                   Text(
                                     'Tell us about you',
-                                    style: Theme.of(context).textTheme.headlineSmall,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .headlineSmall,
                                   ),
                                   const SizedBox(height: 16),
                                   TextFormField(
                                     controller: _nameController,
-                                    decoration: const InputDecoration(labelText: 'Full name *'),
+                                    decoration: const InputDecoration(
+                                        labelText: 'Full name *'),
                                     validator: (value) =>
-                                        value == null || value.trim().isEmpty ? 'Enter your name' : null,
+                                        value == null || value.trim().isEmpty
+                                            ? 'Enter your name'
+                                            : null,
                                   ),
                                   const SizedBox(height: 16),
                                   TextFormField(
                                     controller: _emailController,
-                                    decoration: const InputDecoration(labelText: 'Email address *'),
+                                    decoration: const InputDecoration(
+                                        labelText: 'Email address *'),
                                     keyboardType: TextInputType.emailAddress,
                                     validator: (value) {
-                                      if (value == null || value.trim().isEmpty) {
+                                      if (value == null ||
+                                          value.trim().isEmpty) {
                                         return 'Enter your email';
                                       }
-                                      final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+                                      final emailRegex =
+                                          RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
                                       if (!emailRegex.hasMatch(value.trim())) {
                                         return 'Enter a valid email';
                                       }
@@ -122,26 +131,34 @@ class _RegistrationPageState extends ConsumerState<RegistrationPage> {
                                   const SizedBox(height: 16),
                                   TextFormField(
                                     controller: _phoneController,
-                                    decoration: const InputDecoration(labelText: 'Phone number *'),
+                                    decoration: const InputDecoration(
+                                        labelText: 'Phone number *'),
                                     keyboardType: TextInputType.phone,
                                     validator: (value) =>
-                                        value == null || value.trim().isEmpty ? 'Enter your phone number' : null,
+                                        value == null || value.trim().isEmpty
+                                            ? 'Enter your phone number'
+                                            : null,
                                   ),
                                   const SizedBox(height: 16),
                                   TextFormField(
                                     controller: _companyController,
-                                    decoration: const InputDecoration(labelText: 'Company / Organisation (optional)'),
+                                    decoration: const InputDecoration(
+                                        labelText:
+                                            'Company / Organisation (optional)'),
                                   ),
                                   const SizedBox(height: 24),
                                   SizedBox(
                                     width: double.infinity,
                                     child: FilledButton(
-                                      onPressed: controllerState.isLoading ? null : () => _submit(args),
+                                      onPressed: controllerState.isLoading
+                                          ? null
+                                          : () => _submit(args),
                                       child: controllerState.isLoading
                                           ? const SizedBox(
                                               width: 22,
                                               height: 22,
-                                              child: CircularProgressIndicator(strokeWidth: 2),
+                                              child: CircularProgressIndicator(
+                                                  strokeWidth: 2),
                                             )
                                           : const Text('Send Paystack invoice'),
                                     ),
@@ -151,7 +168,10 @@ class _RegistrationPageState extends ConsumerState<RegistrationPage> {
                                       padding: const EdgeInsets.only(top: 12),
                                       child: Text(
                                         controllerState.error.toString(),
-                                        style: TextStyle(color: Theme.of(context).colorScheme.error),
+                                        style: TextStyle(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .error),
                                       ),
                                     ),
                                 ],
@@ -166,19 +186,24 @@ class _RegistrationPageState extends ConsumerState<RegistrationPage> {
                         child: Card(
                           elevation: 0,
                           color: Theme.of(context).colorScheme.surfaceVariant,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16)),
                           child: Padding(
                             padding: const EdgeInsets.all(24),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('Summary', style: Theme.of(context).textTheme.titleLarge),
+                                Text('Summary',
+                                    style:
+                                        Theme.of(context).textTheme.titleLarge),
                                 const SizedBox(height: 12),
-                                Text('Role: ${args.role[0].toUpperCase()}${args.role.substring(1)}'),
+                                Text(
+                                    'Role: ${args.role[0].toUpperCase()}${args.role.substring(1)}'),
                                 const SizedBox(height: 8),
                                 Text('Pass: ${args.pass.name}'),
                                 const SizedBox(height: 8),
-                                Text('Price: ₦${args.pass.amountNaira.toStringAsFixed(0)}'),
+                                Text(
+                                    'Price: ₦${args.pass.amountNaira.toStringAsFixed(0)}'),
                                 const SizedBox(height: 8),
                                 Text(args.pass.validityLabel),
                                 const SizedBox(height: 16),
@@ -214,11 +239,15 @@ class _RegistrationPageState extends ConsumerState<RegistrationPage> {
       email: _emailController.text.trim().toLowerCase(),
       attendeeRole: args.role,
       phone: _phoneController.text.trim(),
-      company: _companyController.text.trim().isEmpty ? null : _companyController.text.trim(),
+      company: _companyController.text.trim().isEmpty
+          ? null
+          : _companyController.text.trim(),
     );
 
     try {
-      final result = await ref.read(registrationControllerProvider.notifier).submit(payload);
+      final result = await ref
+          .read(registrationControllerProvider.notifier)
+          .submit(payload);
       if (!mounted) return;
       context.goNamed(
         AppRoute.registrationStatus.name,

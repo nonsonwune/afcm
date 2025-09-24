@@ -43,4 +43,3 @@ class AppConfig {
   bool get hasValidSupabaseConfig =>
       supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty;
 }
-

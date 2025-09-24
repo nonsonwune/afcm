@@ -14,6 +14,7 @@
 5. For Flutter, copy `.env.sample` to `.env` (optional) or pass `--dart-define` values when running/building.
    - Supabase project URL: `https://fbhpejawdjokhpaewxoo.supabase.co`
    - Supabase anon key: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZiaHBlamF3ZGpva2hwYWV3eG9vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3MDc3NDIsImV4cCI6MjA3NDI4Mzc0Mn0.VHZJYNqthg108Gl9FUtk4fKYyk8RcqRktoWWVZHPOuI`
+   - Deployed Vercel URL: `https://afcm-web.vercel.app`
 
 ## Database connection strings (Supabase project)
 

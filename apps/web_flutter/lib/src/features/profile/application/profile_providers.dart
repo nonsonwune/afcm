@@ -9,7 +9,8 @@ final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
   return ProfileRepository(client);
 });
 
-final attendeeProfileProvider = FutureProvider.autoDispose<Map<String, dynamic>?>((ref) async {
+final attendeeProfileProvider =
+    FutureProvider.autoDispose<Map<String, dynamic>?>((ref) async {
   final session = ref.watch(supabaseSessionProvider);
   final repository = ref.watch(profileRepositoryProvider);
   final email = session?.user?.email;

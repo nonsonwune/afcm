@@ -6,7 +6,7 @@ class ProfileRepository {
   final SupabaseClient _client;
 
   Future<Map<String, dynamic>?> fetchLatestAttendee(String userId) async {
-    final response = await _client
+    final data = await _client
         .from('attendees')
         .select('full_name, email, attendee_role, status, pass_products(name)')
         .eq('user_id', userId)
@@ -14,11 +14,10 @@ class ProfileRepository {
         .limit(1)
         .maybeSingle();
 
-    if (response.error != null) {
-      throw response.error!;
+    if (data == null) {
+      return null;
     }
 
-    return response.data as Map<String, dynamic>?;
+    return Map<String, dynamic>.from(data as Map);
   }
 }
-

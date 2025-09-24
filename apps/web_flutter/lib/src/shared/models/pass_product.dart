@@ -47,4 +47,3 @@ class PassProduct {
     return 'Valid for Days $validStartDay–$validEndDay';
   }
 }
-

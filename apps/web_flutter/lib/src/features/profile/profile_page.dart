@@ -68,12 +68,14 @@ class ProfilePage extends ConsumerWidget {
               return const Center(
                 child: Padding(
                   padding: EdgeInsets.all(24),
-                  child: Text('No registration found yet. Complete your invoice to appear here.'),
+                  child: Text(
+                      'No registration found yet. Complete your invoice to appear here.'),
                 ),
               );
             }
 
-            final passName = profile['pass_products']?['name'] as String? ?? 'Pending assignment';
+            final passName = profile['pass_products']?['name'] as String? ??
+                'Pending assignment';
             final fullName = (profile['full_name'] ?? '') as String;
             final role = (profile['attendee_role'] ?? '') as String;
             final email = (profile['email'] ?? '') as String;
@@ -83,7 +85,8 @@ class ProfilePage extends ConsumerWidget {
               padding: const EdgeInsets.all(24),
               children: [
                 Card(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
                   child: Padding(
                     padding: const EdgeInsets.all(24),
                     child: Column(
@@ -101,7 +104,8 @@ class ProfilePage extends ConsumerWidget {
                         _ProfileRow(label: 'Pass', value: passName),
                         const SizedBox(height: 24),
                         FilledButton(
-                          onPressed: () => context.goNamed(AppRoute.myTicket.name),
+                          onPressed: () =>
+                              context.goNamed(AppRoute.myTicket.name),
                           child: const Text('View my ticket'),
                         ),
                       ],
@@ -147,4 +151,3 @@ extension on String {
     return this[0].toUpperCase() + substring(1);
   }
 }
-
