@@ -1,368 +1,181 @@
--- Module 1: Registration & Pass Checkout schema additions
+-- Module 1: Pass catalogue, attendees, orders, tickets, and supporting logic.
 
--- Pass products available for sale
+set check_function_bodies = off;
+set statement_timeout = 0;
+set lock_timeout = 0;
+
 create table if not exists public.pass_products (
   id uuid primary key default gen_random_uuid(),
-  sku text unique not null,
+  sku text not null unique,
   name text not null,
   description text,
-  valid_from_offset_days integer not null default 0,
-  valid_day_count integer not null check (valid_day_count > 0),
-  price_kobo bigint not null check (price_kobo >= 0),
-  price_usd_cents integer not null check (price_usd_cents >= 0),
+  amount_kobo integer not null,
+  currency text not null default 'NGN',
+  display_amount_usd numeric(10, 2),
+  valid_start_day integer not null,
+  valid_end_day integer not null,
   is_early_bird boolean not null default false,
   is_active boolean not null default true,
-  created_at timestamptz not null default timezone('utc'::text, now()),
-  updated_at timestamptz not null default timezone('utc'::text, now())
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint pass_products_valid_range check (valid_end_day >= valid_start_day)
 );
 
--- Helper trigger to touch updated_at
-create or replace function public.touch_pass_product_updated_at()
-returns trigger
-language plpgsql
-as
-$$
-begin
-  new.updated_at = timezone('utc', now());
-  return new;
-end;
-$$;
-
-drop trigger if exists pass_products_touch_updated_at on public.pass_products;
-create trigger pass_products_touch_updated_at
-before update on public.pass_products
-for each row
-execute procedure public.touch_pass_product_updated_at();
-
--- Attendee registration status per order
 create table if not exists public.attendees (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references public.users (id) on delete cascade,
-  badge_sku text not null references public.pass_products (sku),
-  status text not null default 'UNPAID' check (status in ('UNPAID','PAID','REFUNDED')),
-  created_at timestamptz not null default timezone('utc'::text, now()),
-  updated_at timestamptz not null default timezone('utc'::text, now())
+  user_id uuid references auth.users (id) on delete set null,
+  profile_id uuid references public.profiles (id) on delete set null,
+  pass_product_id uuid references public.pass_products (id),
+  attendee_role public.attendee_role not null,
+  full_name text not null,
+  email citext not null,
+  phone text,
+  company text,
+  status public.attendee_status not null default 'UNPAID',
+  metadata jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (email, status) where status = 'UNPAID'
 );
 
-create index if not exists attendees_user_idx on public.attendees (user_id);
-create index if not exists attendees_badge_idx on public.attendees (badge_sku);
+create index if not exists idx_attendees_email on public.attendees (email);
+create index if not exists idx_attendees_user_id on public.attendees (user_id);
 
-create or replace function public.touch_attendee_updated_at()
-returns trigger
-language plpgsql
-as
-$$
-begin
-  new.updated_at = timezone('utc', now());
-  return new;
-end;
-$$;
-
-drop trigger if exists attendees_touch_updated_at on public.attendees;
-create trigger attendees_touch_updated_at
-before update on public.attendees
-for each row
-execute procedure public.touch_attendee_updated_at();
-
--- Orders capture payment state snapshots
 create table if not exists public.orders (
   id uuid primary key default gen_random_uuid(),
   attendee_id uuid not null references public.attendees (id) on delete cascade,
-  badge_sku text not null references public.pass_products (sku),
-  currency text not null default 'NGN' check (currency in ('NGN','USD')),
-  amount_kobo bigint not null check (amount_kobo >= 0),
-  paystack_reference text unique,
-  paystack_invoice_code text unique,
-  status text not null default 'pending' check (status in ('pending','paid','failed','refunded')),
-  processed_at timestamptz,
-  created_at timestamptz not null default timezone('utc'::text, now()),
-  updated_at timestamptz not null default timezone('utc'::text, now())
+  pass_product_id uuid not null references public.pass_products (id),
+  status public.order_status not null default 'pending',
+  amount_kobo integer not null,
+  currency text not null default 'NGN',
+  paystack_request_code text unique,
+  paystack_invoice_url text,
+  paystack_pdf_url text,
+  paystack_meta jsonb,
+  paid_at timestamptz,
+  expires_at timestamptz,
+  metadata jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
 );
 
-create index if not exists orders_attendee_idx on public.orders (attendee_id);
-create index if not exists orders_status_idx on public.orders (status);
+create index if not exists idx_orders_attendee on public.orders (attendee_id);
+create index if not exists idx_orders_status on public.orders (status);
+create index if not exists idx_orders_paystack_code on public.orders (paystack_request_code);
+create unique index if not exists idx_orders_pending_unique on public.orders (attendee_id)
+  where status = 'pending';
 
-create or replace function public.touch_order_updated_at()
-returns trigger
-language plpgsql
-as
-$$
-begin
-  new.updated_at = timezone('utc', now());
-  return new;
-end;
-$$;
-
-drop trigger if exists orders_touch_updated_at on public.orders;
-create trigger orders_touch_updated_at
-before update on public.orders
-for each row
-execute procedure public.touch_order_updated_at();
-
--- Tickets issued after payment confirmation
 create table if not exists public.tickets (
   id uuid primary key default gen_random_uuid(),
-  attendee_id uuid not null unique references public.attendees (id) on delete cascade,
-  pass_sku text not null references public.pass_products (sku),
-  valid_from date not null,
-  valid_to date not null,
-  valid_dates daterange not null,
-  qr_payload text not null,
-  issued_at timestamptz not null default timezone('utc'::text, now())
+  attendee_id uuid not null references public.attendees (id) on delete cascade,
+  order_id uuid not null references public.orders (id) on delete cascade,
+  pass_product_id uuid not null references public.pass_products (id),
+  serial_number text not null unique,
+  qr_payload jsonb not null,
+  qr_checksum text not null,
+  valid_from timestamptz not null,
+  valid_to timestamptz not null,
+  ics_base64 text,
+  issued_at timestamptz not null default now(),
+  revoked_at timestamptz,
+  metadata jsonb not null default '{}'::jsonb
 );
 
-create index if not exists tickets_valid_range_idx on public.tickets using gist (valid_dates);
+create index if not exists idx_tickets_attendee on public.tickets (attendee_id);
+create index if not exists idx_tickets_order on public.tickets (order_id);
 
--- Outbound notifications queue (email, sms, etc.)
-create table if not exists public.notifications (
-  id bigint generated by default as identity primary key,
-  user_id uuid references public.users (id) on delete set null,
-  channel text not null default 'email',
-  kind text not null,
-  payload jsonb not null default '{}'::jsonb,
-  status text not null default 'queued' check (status in ('queued','sent','failed')),
-  error text,
-  sent_at timestamptz,
-  created_at timestamptz not null default timezone('utc'::text, now()),
-  updated_at timestamptz not null default timezone('utc'::text, now())
-);
+create sequence if not exists public.ticket_serial_seq start with 100001;
 
-create index if not exists notifications_user_idx on public.notifications (user_id);
-create index if not exists notifications_status_idx on public.notifications (status);
-
-create or replace function public.touch_notification_updated_at()
-returns trigger
-language plpgsql
-as
-$$
+create or replace function public.generate_ticket_serial() returns text as $$
+declare
+  seq bigint;
 begin
-  new.updated_at = timezone('utc', now());
-  return new;
+  select nextval('public.ticket_serial_seq') into seq;
+  return lpad(seq::text, 8, '0');
 end;
-$$;
+$$ language plpgsql;
 
-drop trigger if exists notifications_touch_updated_at on public.notifications;
-create trigger notifications_touch_updated_at
-before update on public.notifications
-for each row
-execute procedure public.touch_notification_updated_at();
+create or replace function public.abandon_stale_orders(max_age interval default interval '24 hours')
+returns integer as $$
+declare
+  updated_count integer;
+begin
+  update public.orders
+  set status = 'expired', updated_at = now()
+  where status = 'pending' and created_at < now() - max_age;
 
--- Helper procedure: create attendee + order snapshot in a single transaction
-create or replace function public.create_attendee_order(
-  p_user_id uuid,
-  p_badge_sku text,
-  p_currency text default 'NGN'
-)
-returns table (
-  attendee_id uuid,
-  order_id uuid,
-  amount_kobo bigint
-)
+  get diagnostics updated_count = row_count;
+  return updated_count;
+end;
+$$ language plpgsql;
+
+create or replace function public.claim_attendee_records(claim_email text)
+returns setof public.attendees
 language plpgsql
 security definer
-set search_path = public
-as
-$$
-declare
-  v_product public.pass_products%rowtype;
-  v_amount bigint;
-  v_attendee_id uuid;
-  v_order_id uuid;
+set search_path = public, extensions
+as $$
 begin
-  select * into v_product
-  from public.pass_products
-  where sku = p_badge_sku
-    and is_active
-  limit 1;
-
-  if not found then
-    raise exception 'Invalid pass SKU %', p_badge_sku;
-  end if;
-
-  if coalesce(p_currency, 'NGN') <> 'NGN' then
-    raise exception 'Only NGN currency is currently supported';
-  end if;
-
-  v_amount := v_product.price_kobo;
-
-  insert into public.attendees (user_id, badge_sku)
-  values (p_user_id, v_product.sku)
-  returning id into v_attendee_id;
-
-  insert into public.orders (attendee_id, badge_sku, currency, amount_kobo)
-  values (v_attendee_id, v_product.sku, 'NGN', v_amount)
-  returning id into v_order_id;
-
   return query
-  select v_attendee_id, v_order_id, v_amount;
+    update public.attendees
+    set user_id = auth.uid(), updated_at = now()
+    where email = claim_email
+      and (user_id is null or user_id = auth.uid())
+    returning *;
 end;
 $$;
 
--- Helper: compute the valid date range for a pass SKU using event settings
-create or replace function public.pass_valid_dates(p_sku text)
-returns daterange
-language plpgsql
-as
-$$
-declare
-  v_product public.pass_products%rowtype;
-  v_event public.event_settings%rowtype;
-  v_start date;
-  v_end date;
+create or replace function public.touch_updated_at() returns trigger as $$
 begin
-  select * into v_product from public.pass_products where sku = p_sku;
-  if not found then
-    raise exception 'Pass product % not found', p_sku;
-  end if;
-
-  select * into v_event
-  from public.event_settings
-  order by start_date asc
-  limit 1;
-
-  if v_event.start_date is null then
-    raise exception 'Event settings missing start date';
-  end if;
-
-  v_start := v_event.start_date + v_product.valid_from_offset_days;
-  v_end := v_start + (v_product.valid_day_count - 1);
-
-  return daterange(v_start, v_end, '[]');
-end;
-$$;
-
--- Ensure valid_dates matches provided bounds before insert/update
-create or replace function public.tickets_valid_dates_check()
-returns trigger
-language plpgsql
-as
-$$
-begin
-  if new.valid_dates is null then
-    raise exception 'valid_dates must be provided';
-  end if;
-
-  if lower(new.valid_dates) <> new.valid_from then
-    raise exception 'valid_from must match lower bound of valid_dates';
-  end if;
-
-  if upper(new.valid_dates) <> new.valid_to then
-    raise exception 'valid_to must match upper bound of valid_dates';
-  end if;
-
+  new.updated_at = now();
   return new;
 end;
-$$;
+$$ language plpgsql;
 
-drop trigger if exists tickets_valid_dates_consistency on public.tickets;
-create trigger tickets_valid_dates_consistency
-before insert or update on public.tickets
-for each row
-execute procedure public.tickets_valid_dates_check();
+create trigger trg_pass_products_updated
+before update on public.pass_products
+for each row execute procedure public.touch_updated_at();
 
--- Row Level Security configuration
-alter table public.pass_products enable row level security;
-alter table public.attendees enable row level security;
-alter table public.orders enable row level security;
-alter table public.tickets enable row level security;
-alter table public.notifications enable row level security;
+create trigger trg_attendees_updated
+before update on public.attendees
+for each row execute procedure public.touch_updated_at();
 
--- pass_products policies
-create policy pass_products_public_select
-  on public.pass_products
+create trigger trg_orders_updated
+before update on public.orders
+for each row execute procedure public.touch_updated_at();
+
+create policy "pass_products are viewable by anyone" on public.pass_products
   for select
-  using (true);
+  using (is_active = true);
 
-create policy pass_products_staff_manage
-  on public.pass_products
-  for all
-  using (public.is_staff())
-  with check (public.is_staff());
+enable row level security on public.pass_products;
 
--- attendees policies (owner or staff)
-create policy attendees_owner_read
-  on public.attendees
-  for select
-  using (auth.uid() = user_id or public.is_staff());
+enable row level security on public.attendees;
 
-create policy attendees_owner_manage
-  on public.attendees
-  for insert
-  with check (auth.uid() = user_id or public.is_staff());
+enable row level security on public.orders;
 
-create policy attendees_owner_update
-  on public.attendees
-  for update
-  using (auth.uid() = user_id or public.is_staff())
-  with check (auth.uid() = user_id or public.is_staff());
+enable row level security on public.tickets;
 
--- orders policies (owner or staff)
-create policy orders_owner_read
-  on public.orders
+create policy "attendees visible to owner" on public.attendees
   for select
   using (
-    public.is_staff() or
-    exists (
-      select 1
-      from public.attendees a
-      where a.id = orders.attendee_id and a.user_id = auth.uid()
+    auth.uid() is not null and (
+      user_id = auth.uid() or profile_id = auth.uid()
     )
   );
 
-create policy orders_owner_insert
-  on public.orders
-  for insert
-  with check (
-    public.is_staff() or
-    exists (
-      select 1
-      from public.attendees a
-      where a.id = orders.attendee_id and a.user_id = auth.uid()
-    )
-  );
-
-create policy orders_owner_update
-  on public.orders
-  for update
-  using (
-    public.is_staff() or
-    exists (
-      select 1
-      from public.attendees a
-      where a.id = orders.attendee_id and a.user_id = auth.uid()
-    )
-  )
-  with check (
-    public.is_staff() or
-    exists (
-      select 1
-      from public.attendees a
-      where a.id = orders.attendee_id and a.user_id = auth.uid()
-    )
-  );
-
--- tickets policies (owner read, staff manage)
-create policy tickets_owner_read
-  on public.tickets
+create policy "orders visible to owner" on public.orders
   for select
   using (
-    public.is_staff() or
-    exists (
-      select 1
-      from public.attendees a
-      where a.id = public.tickets.attendee_id and a.user_id = auth.uid()
+    auth.uid() is not null and attendee_id in (
+      select id from public.attendees where user_id = auth.uid()
     )
   );
 
-create policy tickets_staff_manage
-  on public.tickets
-  for all
-  using (public.is_staff())
-  with check (public.is_staff());
-
--- notifications policies (staff only)
-create policy notifications_staff_manage
-  on public.notifications
-  for all
-  using (public.is_staff())
-  with check (public.is_staff());
+create policy "tickets visible to owner" on public.tickets
+  for select
+  using (
+    auth.uid() is not null and attendee_id in (
+      select id from public.attendees where user_id = auth.uid()
+    )
+  );

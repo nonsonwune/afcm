@@ -1,26 +1,30 @@
 # Flutter/Dart
 .dart_tool/
 .packages
+.pub-cache/
 build/
-.flutter-plugins
-.flutter-plugins-dependencies
-.melos_tool/
+flutter_*.log
+.dart_tool_gen/
 
 # Supabase
 supabase/.temp/
 supabase/.branches/
-supabase/.env
 
-# IDEs
-.idea/
-.vscode/
-.DS_Store
-
-# Node
+# Node/TypeScript
 node_modules/
-
-# Logs
 *.log
 
-# Environments
-.env
+# MacOS
+.DS_Store
+
+# Env files
+*.env
+supabase/.secrets/
+apps/web_flutter/.env
+apps/web_flutter/.env.*
+
+# IDE
+.vscode/
+.idea/
+*.iml
+

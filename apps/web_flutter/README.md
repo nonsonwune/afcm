@@ -1,30 +1,29 @@
 # AFCM Flutter Web App
 
-This Flutter project powers the AFCM event progressive web application.
+Flutter progressive web app for the AFCM event platform. Module 1 delivers pass browsing, attendee registration, and ticket retrieval.
 
-## Configuration
+## Prerequisites
 
-Provide runtime configuration via `--dart-define` when running locally or building:
+- Flutter 3.22+
+- Supabase project with Edge Functions deployed from `../../supabase`
 
-```bash
-flutter run -d chrome \
-  --dart-define=SUPABASE_URL=https://your-project.supabase.co \
-  --dart-define=SUPABASE_ANON_KEY=public-anon-key \
-  --dart-define=SITE_URL=https://afcm.app \
-  --dart-define=FLOOR_PLAN_ASSET=assets/images/floor_plan.svg
-```
-
-## Development
+## Running locally
 
 ```bash
 flutter pub get
-flutter run -d chrome --web-renderer=auto
+flutter run -d chrome \
+  --dart-define=SUPABASE_URL=https://your-project.supabase.co \
+  --dart-define=SUPABASE_ANON_KEY=anon-key \
+  --dart-define=SITE_URL=http://localhost:3000
 ```
 
-Code generation commands will be added in Module 1 once models are introduced.
+## Build for web
 
-## PWA Features
+```bash
+flutter build web \
+  --release \
+  --dart-define=SUPABASE_URL=https://your-project.supabase.co \
+  --dart-define=SUPABASE_ANON_KEY=anon-key \
+  --dart-define=SITE_URL=https://app.afcm.market
+```
 
-- Web manifest and icons located under `web/`.
-- Custom service worker caches the app shell, floor plan illustration, and `/me/ticket` responses for offline ticket access.
-- Floor plan placeholder asset (`floor_plan.svg`) lives under `assets/images/`.

@@ -1,70 +1,77 @@
+truncate table public.pass_products restart identity cascade;
+
 insert into public.pass_products (
   sku,
   name,
   description,
-  valid_from_offset_days,
-  valid_day_count,
-  price_kobo,
-  price_usd_cents,
-  is_early_bird
-) values
+  amount_kobo,
+  currency,
+  display_amount_usd,
+  valid_start_day,
+  valid_end_day,
+  is_early_bird,
+  is_active
+)
+values
   (
     'PASS-1D',
     '1-Day Pass',
-    'Single-day access to all general programming.',
-    0,
-    1,
+    'Access to AFCM Day 1 programming (Investor briefings, keynotes, mixer).',
     7500000,
-    5000,
-    false
+    'NGN',
+    50,
+    1,
+    1,
+    false,
+    true
   ),
   (
     'PASS-2D',
     '2-Day Pass',
-    'Attend any two consecutive event days.',
-    0,
-    2,
+    'Access to AFCM Days 1 & 2 including deal rooms and roundtables.',
     13500000,
-    9000,
-    false
+    'NGN',
+    90,
+    1,
+    2,
+    false,
+    true
   ),
   (
     'PASS-3D',
     '3-Day Pass',
-    'Extended access for deeper networking.',
-    0,
-    3,
+    'Access to AFCM Days 1–3 including expo hall and showcases.',
     20250000,
-    13500,
-    false
+    'NGN',
+    135,
+    1,
+    3,
+    false,
+    true
   ),
   (
     'PASS-4D',
     '4-Day All-Access',
-    'Full access to the conference experience.',
-    0,
-    4,
+    'All programming across the four-day AFCM schedule.',
     27000000,
-    18000,
-    false
+    'NGN',
+    180,
+    1,
+    4,
+    false,
+    true
   ),
   (
     'PASS-4D-EB',
-    'Early-Bird 4-Day',
-    'Discounted full event access for early supporters.',
-    0,
-    4,
+    'Early-Bird All-Access',
+    'Discounted all-access pass for early commitments.',
     24000000,
-    16000,
+    'NGN',
+    160,
+    1,
+    4,
+    true,
     true
   )
-on conflict (sku) do update
-set
-  name = excluded.name,
-  description = excluded.description,
-  valid_from_offset_days = excluded.valid_from_offset_days,
-  valid_day_count = excluded.valid_day_count,
-  price_kobo = excluded.price_kobo,
-  price_usd_cents = excluded.price_usd_cents,
-  is_early_bird = excluded.is_early_bird,
-  updated_at = timezone('utc'::text, now());
+;
+

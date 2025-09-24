@@ -1,46 +1,20 @@
-# AFCM Event Platform Monorepo
+# AFCM Event Platform
 
-This repository hosts the AFCM event progressive web application and Supabase backend.
+This monorepo hosts the Flutter web app and Supabase backend for the African Film & Content Market (AFCM) event platform. Module 1 implements attendee registration, pass checkout via Paystack invoices, and QR ticket issuance.
 
 ## Structure
 
-- `apps/web_flutter/` – Flutter web application (PWA) for attendees, staff, and public visitors.
-- `supabase/` – SQL migrations, seeds, and Edge Function source code.
-- `docs/` – Architecture and operational documentation.
+- `apps/web_flutter` — Flutter PWA for attendees and staff.
+- `supabase` — SQL migrations, seed data, and Edge Functions for server logic.
+- `.docs` — Project documentation, technical requirements, and task lists.
 
 ## Getting Started
 
-1. Install Flutter (3.19 or later) and enable web support:
-   ```bash
-   flutter config --enable-web
-   ```
-2. Install the [Supabase CLI](https://supabase.com/docs/guides/cli).
-3. Copy environment examples and configure secrets:
-   ```bash
-   cp apps/web_flutter/.env.sample apps/web_flutter/.env
-   cp supabase/.env.example supabase/.env
-   ```
-4. Fetch Flutter dependencies:
-   ```bash
-   flutter pub get
-   ```
-5. Run the Flutter web dev server:
-   ```bash
-   flutter run -d chrome --target=lib/main.dart
-   ```
-6. Start Supabase locally:
-   ```bash
-   supabase start
-   supabase db reset
-   ```
+1. Ensure Flutter and Supabase CLI are installed locally.
+2. Copy the provided environment samples and fill in secrets.
+3. Run database migrations and seeds via Supabase CLI.
+4. Launch the Flutter web app with `flutter run -d chrome` or build for release.
 
-See [`docs/foundation.md`](docs/foundation.md) for detailed module planning.
+See `docs/module1_registration.md` for module-specific setup and smoke test steps.
 
-## Module 1 Backend Progress
-
-- Registration schema migration `00000000000200_module1_registration.sql` adds pass catalogues, attendee/order state, tickets, and outbound notifications with RLS policies.
-- Seed script `00000000000200_seed_passes.sql` loads the five launch passes with NGN pricing snapshots.
-- Supabase Edge Functions:
-  - `create-order` (authenticated) orchestrates attendee/order creation and Paystack Payment Request invoices.
-  - `paystack-webhook` handles Paystack callbacks, verifies signatures/status, issues QR tickets, and queues notification jobs.
-- Ensure local `.env` files define `SUPABASE_SERVICE_ROLE_KEY`, `PAYSTACK_SECRET_KEY`, and `QR_SECRET` before serving the functions.
+See `docs/foundation.md` (to be expanded) for detailed environment setup instructions.
