@@ -46,7 +46,7 @@ class AfcmTheme {
         labelStyle: const TextStyle(fontWeight: FontWeight.w500),
       ).copyWith(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
-        selectedColor: _azure500.withValues(alpha: 0.12),
+        selectedColor: _azure500.withOpacity(0.12),
         labelPadding: const EdgeInsets.symmetric(horizontal: 12),
       ),
       filledButtonTheme: FilledButtonThemeData(
@@ -129,7 +129,7 @@ class AfcmTheme {
         labelStyle: const TextStyle(fontWeight: FontWeight.w500),
       ).copyWith(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
-        selectedColor: _azure400.withValues(alpha: 0.2),
+        selectedColor: _azure400.withOpacity(0.2),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
@@ -148,7 +148,7 @@ class AfcmTheme {
         surfaceTintColor: Colors.transparent,
       ),
       dividerTheme:
-          DividerThemeData(color: _slate700.withValues(alpha: 0.6)),
+          DividerThemeData(color: _slate700.withOpacity(0.6)),
       listTileTheme: const ListTileThemeData(
         iconColor: _slate200,
         textColor: _slate100,
@@ -157,7 +157,7 @@ class AfcmTheme {
         filled: true,
         fillColor: _slate900,
         border: OutlineInputBorder(
-        borderSide: BorderSide(color: _slate700.withValues(alpha: 0.7)),
+        borderSide: BorderSide(color: _slate700.withOpacity(0.7)),
           borderRadius: BorderRadius.circular(16),
         ),
         focusedBorder: OutlineInputBorder(
@@ -165,7 +165,7 @@ class AfcmTheme {
           borderRadius: BorderRadius.circular(16),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-        hintStyle: TextStyle(color: _slate500.withValues(alpha: 0.9)),
+        hintStyle: TextStyle(color: _slate500.withOpacity(0.9)),
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
@@ -176,7 +176,7 @@ class AfcmTheme {
       extensions: <ThemeExtension<dynamic>>[
         AfcmPalette(
           heroBackground: _slate900,
-          heroAccent: _azure500.withValues(alpha: 0.25),
+          heroAccent: _azure500.withOpacity(0.25),
           subtleCard: _slate900,
         ),
       ],

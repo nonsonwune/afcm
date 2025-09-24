@@ -134,12 +134,12 @@ class _Footer extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Divider(color: theme.dividerColor.withValues(alpha: 0.6)),
+        Divider(color: theme.dividerColor.withOpacity(0.6)),
         const SizedBox(height: 16),
         Text(
           '© $year AFCM Markets. All rights reserved.',
           style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.64),
+            color: theme.colorScheme.onSurface.withOpacity(0.64),
           ),
         ),
       ],

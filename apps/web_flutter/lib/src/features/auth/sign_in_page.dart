@@ -64,13 +64,13 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16),
                     color:
-                        Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
+                        Theme.of(context).colorScheme.primary.withOpacity(0.08),
                   ),
                   child: Text(
                     _feedback!,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color:
-                              Theme.of(context).colorScheme.primary.withValues(alpha: 0.9),
+                              Theme.of(context).colorScheme.primary.withOpacity(0.9),
                         ),
                   ),
                 ),
@@ -174,7 +174,7 @@ class _SignInHero extends StatelessWidget {
         Text(
           'We’ll send a secure magic link and a six-digit code to your registered email. You can use either to get back into your tickets.',
           style: theme.textTheme.bodyLarge?.copyWith(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.75),
+            color: theme.colorScheme.onSurface.withOpacity(0.75),
             height: 1.5,
           ),
         ),

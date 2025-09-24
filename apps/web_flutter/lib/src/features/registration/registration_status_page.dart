@@ -204,9 +204,9 @@ class _ProgressBadge extends StatelessWidget {
     final theme = Theme.of(context);
     final foreground = isActive
         ? theme.colorScheme.primary
-        : theme.colorScheme.onSurface.withValues(alpha: 0.7);
+        : theme.colorScheme.onSurface.withOpacity(0.7);
     final background = isActive
-        ? theme.colorScheme.primary.withValues(alpha: 0.1)
+        ? theme.colorScheme.primary.withOpacity(0.1)
         : theme.palette.subtleCard;
 
     return Container(
@@ -254,7 +254,7 @@ class _StatusHero extends StatelessWidget {
         Text(
           'We’ve emailed a Paystack invoice to $email. Complete payment to unlock your NFC badge and digital ticket.',
           style: theme.textTheme.bodyLarge?.copyWith(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.78),
+            color: theme.colorScheme.onSurface.withOpacity(0.78),
             height: 1.5,
           ),
         ),
@@ -318,7 +318,7 @@ class _StatusFallbackHero extends StatelessWidget {
         Text(
           'For security, registration sessions time out. Restart from the pass catalogue to send a new invoice.',
           style: theme.textTheme.bodyLarge?.copyWith(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.75),
+            color: theme.colorScheme.onSurface.withOpacity(0.75),
             height: 1.5,
           ),
         ),

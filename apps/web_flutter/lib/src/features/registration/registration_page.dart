@@ -220,7 +220,7 @@ class _RegistrationPageState extends ConsumerState<RegistrationPage> {
                                       color: Theme.of(context)
                                           .colorScheme
                                           .error
-                                          .withValues(alpha: 0.12),
+                                          .withOpacity(0.12),
                                     ),
                                     child: Text(
                                       controllerState.error.toString(),
@@ -343,7 +343,7 @@ class _RegistrationHero extends StatelessWidget {
         Text(
           'Complete the attendee form and we’ll email a Paystack invoice immediately. Once payment is captured, your ticket and QR code unlock automatically.',
           style: theme.textTheme.bodyLarge?.copyWith(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.75),
+            color: theme.colorScheme.onSurface.withOpacity(0.75),
             height: 1.5,
           ),
         ),
@@ -369,7 +369,7 @@ class _RegistrationFallbackHero extends StatelessWidget {
         Text(
           'Pass selection kickstarts registration. Every pass includes QR ticketing, meeting access, and onsite concierge support.',
           style: theme.textTheme.bodyLarge?.copyWith(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.75),
+            color: theme.colorScheme.onSurface.withOpacity(0.75),
             height: 1.5,
           ),
         ),
@@ -391,11 +391,11 @@ class _ProgressBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final background = isActive
-        ? theme.colorScheme.primary.withValues(alpha: 0.1)
+        ? theme.colorScheme.primary.withOpacity(0.1)
         : theme.palette.subtleCard;
     final foreground = isActive
         ? theme.colorScheme.primary
-        : theme.colorScheme.onSurface.withValues(alpha: 0.7);
+        : theme.colorScheme.onSurface.withOpacity(0.7);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -483,7 +483,7 @@ class _PassSummaryCard extends StatelessWidget {
           child: Text(
             label,
             style: theme.textTheme.bodySmall
-                ?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+                ?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.6)),
           ),
         ),
         const SizedBox(width: 12),

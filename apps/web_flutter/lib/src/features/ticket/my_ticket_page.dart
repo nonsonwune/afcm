@@ -205,7 +205,7 @@ class _TicketHero extends StatelessWidget {
         Text(
           'Keep this page handy at the door. You can also add the event to your calendar or download a static backup.',
           style: theme.textTheme.bodyLarge?.copyWith(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.78),
+            color: theme.colorScheme.onSurface.withOpacity(0.78),
             height: 1.5,
           ),
         ),
@@ -228,7 +228,7 @@ class _TicketFallbackHero extends StatelessWidget {
         Text(
           'Your QR code is protected behind a secure sign-in. Use the email you registered with to continue.',
           style: theme.textTheme.bodyLarge?.copyWith(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.75),
+            color: theme.colorScheme.onSurface.withOpacity(0.75),
             height: 1.5,
           ),
         ),

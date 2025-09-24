@@ -104,7 +104,7 @@ class ProfilePage extends ConsumerWidget {
                               color: Theme.of(context)
                                   .colorScheme
                                   .onSurface
-                                  .withValues(alpha: 0.7),
+                                  .withOpacity(0.7),
                             ),
                       ),
                       const SizedBox(height: 20),
@@ -183,7 +183,7 @@ class _ProfileHero extends StatelessWidget {
         Text(
           'Track your invoice status, download tickets, and manage event essentials from one place.',
           style: theme.textTheme.bodyLarge?.copyWith(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.78),
+            color: theme.colorScheme.onSurface.withOpacity(0.78),
             height: 1.5,
           ),
         ),
@@ -206,7 +206,7 @@ class _ProfileFallbackHero extends StatelessWidget {
         Text(
           'We’ll reconnect you with your invoices and tickets once you confirm your email.',
           style: theme.textTheme.bodyLarge?.copyWith(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.75),
+            color: theme.colorScheme.onSurface.withOpacity(0.75),
             height: 1.5,
           ),
         ),
@@ -289,7 +289,7 @@ class _ProfileBadgeRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(

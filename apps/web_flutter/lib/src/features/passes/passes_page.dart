@@ -77,7 +77,7 @@ class _PassesHero extends StatelessWidget {
         Text(
           'Choose the experience that fits your goals. Investor roundtables, curated deal rooms, and backstage access are available with every tier.',
           style: theme.textTheme.bodyLarge?.copyWith(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.75),
+            color: theme.colorScheme.onSurface.withOpacity(0.75),
             height: 1.5,
           ),
         ),
@@ -189,7 +189,7 @@ class _ErrorState extends StatelessWidget {
           Text(
             error.toString(),
             style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+              color: theme.colorScheme.onSurface.withOpacity(0.6),
             ),
             textAlign: TextAlign.center,
           ),
@@ -242,7 +242,7 @@ class _PassCard extends StatelessWidget {
                         pass.validityLabel,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.64),
+                              .withOpacity(0.64),
                         ),
                       ),
                     ],
@@ -253,7 +253,7 @@ class _PassCard extends StatelessWidget {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
-                      color: theme.palette.heroAccent.withValues(alpha: 0.12),
+                      color: theme.palette.heroAccent.withOpacity(0.12),
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(
@@ -279,7 +279,7 @@ class _PassCard extends StatelessWidget {
                 child: Text(
                   usdDisplay,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                    color: theme.colorScheme.onSurface.withOpacity(0.6),
                   ),
                 ),
               ),
