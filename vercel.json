@@ -1,0 +1,8 @@
+{
+  "framework": null,
+  "outputDirectory": "apps/web_flutter/build/web",
+  "buildCommand": "scripts/build-web.sh",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
