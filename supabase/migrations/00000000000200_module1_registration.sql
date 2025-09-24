@@ -34,12 +34,13 @@ create table if not exists public.attendees (
   status public.attendee_status not null default 'UNPAID',
   metadata jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  unique (email, status) where status = 'UNPAID'
+  updated_at timestamptz not null default now()
 );
 
 create index if not exists idx_attendees_email on public.attendees (email);
 create index if not exists idx_attendees_user_id on public.attendees (user_id);
+create unique index if not exists idx_attendees_email_unpaid on public.attendees (email)
+  where status = 'UNPAID';
 
 create table if not exists public.orders (
   id uuid primary key default gen_random_uuid(),
@@ -148,13 +149,13 @@ create policy "pass_products are viewable by anyone" on public.pass_products
   for select
   using (is_active = true);
 
-enable row level security on public.pass_products;
+alter table public.pass_products enable row level security;
 
-enable row level security on public.attendees;
+alter table public.attendees enable row level security;
 
-enable row level security on public.orders;
+alter table public.orders enable row level security;
 
-enable row level security on public.tickets;
+alter table public.tickets enable row level security;
 
 create policy "attendees visible to owner" on public.attendees
   for select

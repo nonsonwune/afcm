@@ -92,4 +92,4 @@ create table if not exists public.notifications (
 
 create index if not exists idx_notifications_status on public.notifications (status, send_after);
 
-enable row level security on public.notifications;
+alter table public.notifications enable row level security;

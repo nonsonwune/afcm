@@ -33,3 +33,4 @@ apps/web_flutter/.packages
 .vscode/
 .idea/
 *.iml
+.vercel
