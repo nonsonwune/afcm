@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../router/app_router.dart';
 import '../../shared/models/order_models.dart';
+import '../../shared/widgets/app_shell.dart';
+import '../../style/brand_theme.dart';
 import 'application/registration_controller.dart';
 import 'models/registration_flow.dart';
 
@@ -45,185 +47,216 @@ class _RegistrationPageState extends ConsumerState<RegistrationPage> {
   Widget build(BuildContext context) {
     final args = widget.args;
     if (args == null) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Register')),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text('Please select a pass to start registration.'),
-              const SizedBox(height: 16),
-              FilledButton(
-                onPressed: () => context.goNamed(AppRoute.passes.name),
-                child: const Text('Browse Passes'),
+      return AppShell(
+        trailing: TextButton(
+          onPressed: () => context.goNamed(AppRoute.passes.name),
+          child: const Text('View passes'),
+        ),
+        hero: const _RegistrationFallbackHero(),
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Card(
+              margin: EdgeInsets.zero,
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Choose a pass to get started.',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Once you’ve selected a pass, we’ll capture your details and send a Paystack invoice instantly.',
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.copyWith(height: 1.6),
+                    ),
+                    const SizedBox(height: 20),
+                    FilledButton(
+                      onPressed: () => context.goNamed(AppRoute.passes.name),
+                      child: const Text('Browse passes'),
+                    ),
+                  ],
+                ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       );
     }
 
     final controllerState = ref.watch(registrationControllerProvider);
 
-    return Scaffold(
-      appBar: AppBar(title: Text('Register – ${args.pass.name}')),
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final isWide = constraints.maxWidth > 900;
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1100),
-                  child: Flex(
-                    direction: isWide ? Axis.horizontal : Axis.vertical,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        flex: 3,
-                        child: Card(
-                          elevation: 2,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16)),
-                          child: Padding(
-                            padding: const EdgeInsets.all(24),
-                            child: Form(
-                              key: _formKey,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Tell us about you',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .headlineSmall,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  TextFormField(
-                                    controller: _nameController,
-                                    decoration: const InputDecoration(
-                                        labelText: 'Full name *'),
-                                    validator: (value) =>
-                                        value == null || value.trim().isEmpty
-                                            ? 'Enter your name'
-                                            : null,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  TextFormField(
-                                    controller: _emailController,
-                                    decoration: const InputDecoration(
-                                        labelText: 'Email address *'),
-                                    keyboardType: TextInputType.emailAddress,
-                                    validator: (value) {
-                                      if (value == null ||
-                                          value.trim().isEmpty) {
-                                        return 'Enter your email';
-                                      }
-                                      final emailRegex =
-                                          RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
-                                      if (!emailRegex.hasMatch(value.trim())) {
-                                        return 'Enter a valid email';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                  const SizedBox(height: 16),
-                                  TextFormField(
-                                    controller: _phoneController,
-                                    decoration: const InputDecoration(
-                                        labelText: 'Phone number *'),
-                                    keyboardType: TextInputType.phone,
-                                    validator: (value) =>
-                                        value == null || value.trim().isEmpty
-                                            ? 'Enter your phone number'
-                                            : null,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  TextFormField(
-                                    controller: _companyController,
-                                    decoration: const InputDecoration(
-                                        labelText:
-                                            'Company / Organisation (optional)'),
-                                  ),
-                                  const SizedBox(height: 24),
-                                  SizedBox(
+    return AppShell(
+      trailing: TextButton(
+        onPressed: controllerState.isLoading
+            ? null
+            : () => context.goNamed(AppRoute.passes.name),
+        child: const Text('Change pass'),
+      ),
+      hero: _RegistrationHero(passName: args.pass.name, role: args.role),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isWide = constraints.maxWidth >= 920;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Wrap(
+                spacing: 16,
+                runSpacing: 8,
+                children: const [
+                  _ProgressBadge(step: 'Attendee details', isActive: true),
+                  _ProgressBadge(step: 'Invoice sent'),
+                  _ProgressBadge(step: 'Payment + ticket'),
+                ],
+              ),
+              const SizedBox(height: 24),
+              Flex(
+                direction: isWide ? Axis.horizontal : Axis.vertical,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: Card(
+                      margin: EdgeInsets.zero,
+                      child: Padding(
+                        padding: const EdgeInsets.all(28),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Tell us about you',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleLarge
+                                    ?.copyWith(fontWeight: FontWeight.w700),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                'These details appear on your invoice and ticket. We’ll only use them for event communications.',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(height: 1.5),
+                              ),
+                              const SizedBox(height: 24),
+                              _buildTextField(
+                                controller: _nameController,
+                                label: 'Full name *',
+                                validator: (value) =>
+                                    value == null || value.trim().isEmpty
+                                        ? 'Enter your name'
+                                        : null,
+                              ),
+                              const SizedBox(height: 20),
+                              _buildTextField(
+                                controller: _emailController,
+                                label: 'Email address *',
+                                keyboardType: TextInputType.emailAddress,
+                                helperText:
+                                    'Invoice, confirmations, and ticket delivery will go here.',
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return 'Enter your email';
+                                  }
+                                  final emailRegex =
+                                      RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+                                  if (!emailRegex.hasMatch(value.trim())) {
+                                    return 'Enter a valid email';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 20),
+                              _buildTextField(
+                                controller: _phoneController,
+                                label: 'Phone number *',
+                                keyboardType: TextInputType.phone,
+                                helperText:
+                                    'Optional for WhatsApp updates, but strongly recommended.',
+                                validator: (value) =>
+                                    value == null || value.trim().isEmpty
+                                        ? 'Enter your phone number'
+                                        : null,
+                              ),
+                              const SizedBox(height: 20),
+                              _buildTextField(
+                                controller: _companyController,
+                                label: 'Company / Organisation',
+                                helperText:
+                                    'Appears on your badge so partners can identify you quickly.',
+                              ),
+                              const SizedBox(height: 28),
+                              SizedBox(
+                                width: double.infinity,
+                                child: FilledButton(
+                                  onPressed: controllerState.isLoading
+                                      ? null
+                                      : () => _submit(args),
+                                  child: controllerState.isLoading
+                                      ? const SizedBox(
+                                          width: 22,
+                                          height: 22,
+                                          child: CircularProgressIndicator(
+                                              strokeWidth: 2),
+                                        )
+                                      : const Text('Send Paystack invoice'),
+                                ),
+                              ),
+                              if (controllerState.hasError)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 16),
+                                  child: Container(
                                     width: double.infinity,
-                                    child: FilledButton(
-                                      onPressed: controllerState.isLoading
-                                          ? null
-                                          : () => _submit(args),
-                                      child: controllerState.isLoading
-                                          ? const SizedBox(
-                                              width: 22,
-                                              height: 22,
-                                              child: CircularProgressIndicator(
-                                                  strokeWidth: 2),
-                                            )
-                                          : const Text('Send Paystack invoice'),
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(18),
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .error
+                                          .withValues(alpha: 0.12),
                                     ),
-                                  ),
-                                  if (controllerState.hasError)
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 12),
-                                      child: Text(
-                                        controllerState.error.toString(),
-                                        style: TextStyle(
+                                    child: Text(
+                                      controllerState.error.toString(),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(
                                             color: Theme.of(context)
                                                 .colorScheme
-                                                .error),
-                                      ),
+                                                .error,
+                                          ),
                                     ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: isWide ? 24 : 0, height: isWide ? 0 : 24),
-                      Expanded(
-                        flex: 2,
-                        child: Card(
-                          elevation: 0,
-                          color: Theme.of(context).colorScheme.surfaceVariant,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16)),
-                          child: Padding(
-                            padding: const EdgeInsets.all(24),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Summary',
-                                    style:
-                                        Theme.of(context).textTheme.titleLarge),
-                                const SizedBox(height: 12),
-                                Text(
-                                    'Role: ${args.role[0].toUpperCase()}${args.role.substring(1)}'),
-                                const SizedBox(height: 8),
-                                Text('Pass: ${args.pass.name}'),
-                                const SizedBox(height: 8),
-                                Text(
-                                    'Price: ₦${args.pass.amountNaira.toStringAsFixed(0)}'),
-                                const SizedBox(height: 8),
-                                Text(args.pass.validityLabel),
-                                const SizedBox(height: 16),
-                                const Divider(),
-                                const SizedBox(height: 16),
-                                const Text(
-                                  'You will receive a Paystack invoice via email. After payment, your ticket and QR code will be issued automatically.',
+                                  ),
                                 ),
-                              ],
-                            ),
+                            ],
                           ),
                         ),
                       ),
-                    ],
+                    ),
                   ),
-                ),
+                  SizedBox(width: isWide ? 24 : 0, height: isWide ? 0 : 24),
+                  Expanded(
+                    flex: 2,
+                    child: Column(
+                      children: [
+                        _PassSummaryCard(args: args),
+                        const SizedBox(height: 16),
+                        const _RegistrationSupportCard(),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            );
-          },
-        ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -262,5 +295,263 @@ class _RegistrationPageState extends ConsumerState<RegistrationPage> {
     } catch (_) {
       // Errors surfaced via controller state.
     }
+  }
+}
+
+TextFormField _buildTextField({
+  required TextEditingController controller,
+  required String label,
+  TextInputType? keyboardType,
+  String? helperText,
+  String? Function(String?)? validator,
+}) {
+  return TextFormField(
+    controller: controller,
+    keyboardType: keyboardType,
+    decoration: InputDecoration(
+      labelText: label,
+      helperText: helperText,
+    ),
+    validator: validator,
+  );
+}
+
+class _RegistrationHero extends StatelessWidget {
+  const _RegistrationHero({required this.passName, required this.role});
+
+  final String passName;
+  final String role;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Confirm your AFCM registration',
+          style: theme.textTheme.headlineLarge,
+        ),
+        const SizedBox(height: 12),
+        Text(
+          '$passName · ${role[0].toUpperCase()}${role.substring(1)}',
+          style: theme.textTheme.titleMedium?.copyWith(
+            color: theme.colorScheme.primary,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'Complete the attendee form and we’ll email a Paystack invoice immediately. Once payment is captured, your ticket and QR code unlock automatically.',
+          style: theme.textTheme.bodyLarge?.copyWith(
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.75),
+            height: 1.5,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _RegistrationFallbackHero extends StatelessWidget {
+  const _RegistrationFallbackHero();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Choose a pass to continue',
+          style: theme.textTheme.headlineLarge,
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'Pass selection kickstarts registration. Every pass includes QR ticketing, meeting access, and onsite concierge support.',
+          style: theme.textTheme.bodyLarge?.copyWith(
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.75),
+            height: 1.5,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ProgressBadge extends StatelessWidget {
+  const _ProgressBadge({
+    required this.step,
+    this.isActive = false,
+  });
+
+  final String step;
+  final bool isActive;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final background = isActive
+        ? theme.colorScheme.primary.withValues(alpha: 0.1)
+        : theme.palette.subtleCard;
+    final foreground = isActive
+        ? theme.colorScheme.primary
+        : theme.colorScheme.onSurface.withValues(alpha: 0.7);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isActive ? Icons.check_circle : Icons.radio_button_unchecked,
+            size: 18,
+            color: foreground,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            step,
+            style: theme.textTheme.labelLarge?.copyWith(color: foreground),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PassSummaryCard extends StatelessWidget {
+  const _PassSummaryCard({required this.args});
+
+  final RegistrationFlowArgs args;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      margin: EdgeInsets.zero,
+      color: theme.palette.subtleCard,
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Pass summary',
+              style: theme.textTheme.titleMedium,
+            ),
+            const SizedBox(height: 16),
+            _summaryRow(
+              context,
+              label: 'Role',
+              value: '${args.role[0].toUpperCase()}${args.role.substring(1)}',
+            ),
+            const SizedBox(height: 12),
+            _summaryRow(context, label: 'Pass', value: args.pass.name),
+            const SizedBox(height: 12),
+            _summaryRow(
+              context,
+              label: 'Price',
+              value: '₦${args.pass.amountNaira.toStringAsFixed(0)}',
+            ),
+            const SizedBox(height: 12),
+            _summaryRow(
+              context,
+              label: 'Access',
+              value: args.pass.validityLabel,
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'You’ll receive a Paystack invoice and email receipt immediately. Please settle payment within 48 hours to secure your seat.',
+              style: theme.textTheme.bodySmall?.copyWith(height: 1.6),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _summaryRow(BuildContext context,
+      {required String label, required String value}) {
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        SizedBox(
+          width: 88,
+          child: Text(
+            label,
+            style: theme.textTheme.bodySmall
+                ?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            value,
+            style: theme.textTheme.bodyMedium,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _RegistrationSupportCard extends StatelessWidget {
+  const _RegistrationSupportCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(22),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'What happens next?',
+              style: theme.textTheme.titleMedium,
+            ),
+            const SizedBox(height: 12),
+            _infoRow(
+              icon: Icons.receipt_long,
+              text:
+                  'Paystack invoice arrives instantly—check spam if you don’t see it within 2 minutes.',
+            ),
+            const SizedBox(height: 12),
+            _infoRow(
+              icon: Icons.verified_user,
+              text:
+                  'Payment confirmation triggers your ticket email, calendar invite, and QR code.',
+            ),
+            const SizedBox(height: 12),
+            _infoRow(
+              icon: Icons.support_agent,
+              text:
+                  'Questions? Email tickets@afcm.market and our concierge team will assist.',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _infoRow({required IconData icon, required String text}) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 20),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(height: 1.5),
+          ),
+        ),
+      ],
+    );
   }
 }

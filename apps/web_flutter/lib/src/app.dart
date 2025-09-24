@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'router/app_router.dart';
+import 'style/brand_theme.dart';
 
 class AfcmApp extends ConsumerWidget {
   const AfcmApp({super.key});
@@ -15,33 +16,14 @@ class AfcmApp extends ConsumerWidget {
       title: 'AFCM Event',
       debugShowCheckedModeBanner: false,
       routerConfig: router,
-      theme: _buildTheme(),
-      darkTheme: _buildTheme(brightness: Brightness.dark),
+      theme: AfcmTheme.light(),
+      darkTheme: AfcmTheme.dark(),
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: const [Locale('en')],
-    );
-  }
-
-  ThemeData _buildTheme({Brightness brightness = Brightness.light}) {
-    final base = ThemeData(
-      useMaterial3: true,
-      brightness: brightness,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: const Color(0xFF0B3D91),
-        brightness: brightness,
-      ),
-    );
-    return base.copyWith(
-      appBarTheme: base.appBarTheme.copyWith(
-        centerTitle: true,
-        elevation: 0,
-        backgroundColor: base.colorScheme.surface,
-        foregroundColor: base.colorScheme.onSurface,
-      ),
     );
   }
 }

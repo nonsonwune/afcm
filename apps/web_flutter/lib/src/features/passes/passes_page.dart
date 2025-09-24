@@ -6,6 +6,8 @@ import 'package:intl/intl.dart';
 import '../../router/app_router.dart';
 import '../../shared/models/pass_product.dart';
 import '../../shared/providers/repository_providers.dart';
+import '../../shared/widgets/app_shell.dart';
+import '../../style/brand_theme.dart';
 import '../auth/application/auth_providers.dart';
 import '../registration/models/registration_flow.dart';
 
@@ -28,99 +30,170 @@ class PassesPage extends ConsumerWidget {
     final selectedRole = ref.watch(_selectedRoleProvider);
     final isAuthenticated = ref.watch(isAuthenticatedProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Choose Your Pass'),
-        actions: [
-          TextButton(
-            onPressed: () => isAuthenticated
-                ? context.goNamed(AppRoute.profile.name)
-                : context.goNamed(AppRoute.signIn.name),
-            child: Text(isAuthenticated ? 'My profile' : 'Sign in'),
-          ),
-        ],
+    return AppShell(
+      trailing: TextButton(
+        onPressed: () => isAuthenticated
+            ? context.goNamed(AppRoute.profile.name)
+            : context.goNamed(AppRoute.signIn.name),
+        child: Text(isAuthenticated ? 'My profile' : 'Sign in'),
       ),
-      body: SafeArea(
-        child: passesAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, _) => Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Text(
-                'Unable to load passes.\n${error.toString()}',
-                textAlign: TextAlign.center,
-              ),
-            ),
+      hero: const _PassesHero(),
+      body: passesAsync.when(
+        loading: () => const Padding(
+          padding: EdgeInsets.symmetric(vertical: 80),
+          child: Center(child: CircularProgressIndicator()),
+        ),
+        error: (error, _) => _ErrorState(error: error),
+        data: (passes) => _PassCatalogue(
+          passes: passes,
+          selectedRole: selectedRole,
+          onRoleSelected: (role) => ref.read(_selectedRoleProvider.notifier).state = role,
+          onSelectPass: (pass) => context.pushNamed(
+            AppRoute.register.name,
+            extra: RegistrationFlowArgs(pass: pass, role: selectedRole),
           ),
-          data: (passes) {
-            return LayoutBuilder(
-              builder: (context, constraints) {
-                final isWide = constraints.maxWidth > 840;
-                return SingleChildScrollView(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 960),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Select the role that best matches your participation, then choose a pass to continue.',
-                            style: TextStyle(fontSize: 16),
-                          ),
-                          const SizedBox(height: 16),
-                          Wrap(
-                            spacing: 12,
-                            runSpacing: 12,
-                            children: _roles
-                                .map(
-                                  (role) => ChoiceChip(
-                                    label: Text(role['label']!),
-                                    selected: selectedRole == role['value'],
-                                    onSelected: (_) => ref
-                                        .read(_selectedRoleProvider.notifier)
-                                        .state = role['value']!,
-                                  ),
-                                )
-                                .toList(),
-                          ),
-                          const SizedBox(height: 32),
-                          GridView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            gridDelegate:
-                                SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: isWide ? 2 : 1,
-                              mainAxisSpacing: 20,
-                              crossAxisSpacing: 20,
-                              childAspectRatio: isWide ? 1.5 : 1.1,
-                            ),
-                            itemCount: passes.length,
-                            itemBuilder: (context, index) {
-                              final pass = passes[index];
-                              return _PassCard(
-                                pass: pass,
-                                role: selectedRole,
-                                onTap: () {
-                                  context.pushNamed(
-                                    AppRoute.register.name,
-                                    extra: RegistrationFlowArgs(
-                                        pass: pass, role: selectedRole),
-                                  );
-                                },
-                              );
-                            },
-                          ),
-                        ],
-                      ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PassesHero extends StatelessWidget {
+  const _PassesHero();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Secure your AFCM Lagos pass',
+          style: theme.textTheme.headlineLarge?.copyWith(
+            color: theme.colorScheme.onSurface,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          'Choose the experience that fits your goals. Investor roundtables, curated deal rooms, and backstage access are available with every tier.',
+          style: theme.textTheme.bodyLarge?.copyWith(
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.75),
+            height: 1.5,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PassCatalogue extends StatelessWidget {
+  const _PassCatalogue({
+    required this.passes,
+    required this.selectedRole,
+    required this.onRoleSelected,
+    required this.onSelectPass,
+  });
+
+  final List<PassProduct> passes;
+  final String selectedRole;
+  final ValueChanged<String> onRoleSelected;
+  final ValueChanged<PassProduct> onSelectPass;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final theme = Theme.of(context);
+        final isTablet = constraints.maxWidth >= 720;
+        final isDesktop = constraints.maxWidth >= 1040;
+        final crossAxisCount = isDesktop
+            ? 3
+            : isTablet
+                ? 2
+                : 1;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Pick your focus area',
+              style: theme.textTheme.titleLarge,
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: PassesPage._roles
+                  .map(
+                    (role) => ChoiceChip(
+                      label: Text(role['label']!),
+                      selected: selectedRole == role['value'],
+                      onSelected: (_) => onRoleSelected(role['value']!),
                     ),
-                  ),
+                  )
+                  .toList(),
+            ),
+            const SizedBox(height: 36),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                mainAxisSpacing: 24,
+                crossAxisSpacing: 24,
+                childAspectRatio: crossAxisCount == 1
+                    ? 1.05
+                    : crossAxisCount == 2
+                        ? 0.95
+                        : 0.88,
+              ),
+              itemCount: passes.length,
+              itemBuilder: (context, index) {
+                final pass = passes[index];
+                return _PassCard(
+                  pass: pass,
+                  role: selectedRole,
+                  onTap: () => onSelectPass(pass),
                 );
               },
-            );
-          },
-        ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _ErrorState extends StatelessWidget {
+  const _ErrorState({required this.error});
+
+  final Object error;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 80),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.wifi_off_rounded,
+              size: 48, color: theme.colorScheme.primary),
+          const SizedBox(height: 16),
+          Text(
+            'We can’t reach the pass catalogue right now.',
+            style: theme.textTheme.titleMedium,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            error.toString(),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }
@@ -144,68 +217,87 @@ class _PassCard extends StatelessWidget {
         ? '~ USD ${NumberFormat.decimalPattern().format(pass.displayAmountUsd)}'
         : null;
 
+    final theme = Theme.of(context);
     return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
                 Expanded(
-                  child: Text(
-                    pass.name,
-                    style: Theme.of(context).textTheme.headlineSmall,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        pass.name,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        pass.validityLabel,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.64),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 if (pass.isEarlyBird)
                   Container(
                     padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.orange.shade100,
+                      color: theme.palette.heroAccent.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(
-                      'Early Bird',
-                      style: TextStyle(
-                          color: Colors.orange.shade800,
-                          fontWeight: FontWeight.bold),
+                      'Early bird',
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: theme.palette.heroAccent,
+                      ),
                     ),
                   ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 24),
             Text(
               nairaFormat.format(pass.amountNaira),
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.primary,
-                  fontWeight: FontWeight.bold),
+              style: theme.textTheme.headlineSmall?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w700,
+              ),
             ),
             if (usdDisplay != null)
               Padding(
-                padding: const EdgeInsets.only(top: 4),
+                padding: const EdgeInsets.only(top: 6),
                 child: Text(
                   usdDisplay,
-                  style: const TextStyle(color: Colors.grey),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
                 ),
               ),
-            const SizedBox(height: 16),
-            Text(pass.description),
-            const SizedBox(height: 12),
-            Text(
-              pass.validityLabel,
-              style: const TextStyle(fontWeight: FontWeight.w600),
+            const SizedBox(height: 20),
+            Expanded(
+              child: Text(
+                pass.description,
+                style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
+              ),
             ),
-            const Spacer(),
+            const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
               child: FilledButton(
                 onPressed: onTap,
                 child: Text(
-                    'Register as ${role[0].toUpperCase()}${role.substring(1)}'),
+                  'Continue as ${role[0].toUpperCase()}${role.substring(1)}',
+                ),
               ),
             ),
           ],

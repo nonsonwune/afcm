@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../router/app_router.dart';
 import '../../shared/providers/app_providers.dart';
+import '../../shared/widgets/app_shell.dart';
+import '../../style/brand_theme.dart';
 import '../ticket/application/ticket_providers.dart';
 import 'application/auth_providers.dart';
 
@@ -32,76 +34,72 @@ class _SignInPageState extends ConsumerState<SignInPage> {
   Widget build(BuildContext context) {
     final config = ref.watch(appConfigProvider);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Sign in')),
+    return AppShell(
+      trailing: TextButton(
+        onPressed: () => context.goNamed(AppRoute.passes.name),
+        child: const Text('View passes'),
+      ),
+      hero: const _SignInHero(),
       body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Access your AFCM ticket',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'Enter the email you used to register. We will send a one-time passcode to sign you in securely.',
-                ),
-                const SizedBox(height: 24),
-                TextField(
-                  controller: _emailController,
-                  enabled: !_codeSent,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration:
-                      const InputDecoration(labelText: 'Email address *'),
-                ),
-                const SizedBox(height: 16),
-                if (_codeSent)
-                  TextField(
-                    controller: _otpController,
-                    maxLength: 6,
-                    keyboardType: TextInputType.number,
-                    decoration:
-                        const InputDecoration(labelText: '6-digit code *'),
-                  ),
-                const SizedBox(height: 24),
-                SizedBox(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 520),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _AuthFieldGroup(
+                emailController: _emailController,
+                otpController: _otpController,
+                codeSent: _codeSent,
+                isLoading: _isLoading,
+                onPrimaryAction: () =>
+                    _codeSent ? _verifyOtp() : _sendOtp(config.siteUrl),
+              ),
+              const SizedBox(height: 16),
+              if (_feedback != null)
+                Container(
                   width: double.infinity,
-                  child: FilledButton(
-                    onPressed: _isLoading
-                        ? null
-                        : () =>
-                            _codeSent ? _verifyOtp() : _sendOtp(config.siteUrl),
-                    child: _isLoading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(_codeSent ? 'Verify code' : 'Send sign-in code'),
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    color:
+                        Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
+                  ),
+                  child: Text(
+                    _feedback!,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color:
+                              Theme.of(context).colorScheme.primary.withValues(alpha: 0.9),
+                        ),
                   ),
                 ),
-                if (_feedback != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 16),
-                    child: Text(
-                      _feedback!,
-                      style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary),
+              if (_codeSent)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    TextButton(
+                      onPressed: _isLoading
+                          ? null
+                          : () => _sendOtp(config.siteUrl, resend: true),
+                      child: const Text('Resend email'),
                     ),
-                  ),
-                if (_codeSent)
-                  TextButton(
-                    onPressed: _isLoading
-                        ? null
-                        : () => _sendOtp(config.siteUrl, resend: true),
-                    child: const Text('Resend code'),
-                  ),
-              ],
-            ),
+                    TextButton(
+                      onPressed: _isLoading
+                          ? null
+                          : () {
+                              setState(() {
+                                _codeSent = false;
+                                _otpController.clear();
+                              });
+                            },
+                      child: const Text('Enter a different email'),
+                    ),
+                  ],
+                ),
+              const SizedBox(height: 32),
+              const _SignInSupportPanel(),
+            ],
           ),
         ),
       ),
@@ -123,8 +121,8 @@ class _SignInPageState extends ConsumerState<SignInPage> {
       setState(() {
         _codeSent = true;
         _feedback = resend
-            ? 'Code resent. Check your inbox.'
-            : 'Code sent. Please check your email.';
+            ? 'A fresh sign-in email is on its way. Follow the link or use the 6-digit code inside.'
+            : 'We just sent a secure sign-in email. Open it on this device and tap the link or enter the 6-digit code below.';
       });
     } catch (error) {
       setState(() => _feedback = 'Unable to send code: $error');
@@ -156,5 +154,124 @@ class _SignInPageState extends ConsumerState<SignInPage> {
     } finally {
       setState(() => _isLoading = false);
     }
+  }
+}
+
+class _SignInHero extends StatelessWidget {
+  const _SignInHero();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Sign in to manage your AFCM experience',
+          style: theme.textTheme.headlineLarge,
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'We’ll send a secure magic link and a six-digit code to your registered email. You can use either to get back into your tickets.',
+          style: theme.textTheme.bodyLarge?.copyWith(
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.75),
+            height: 1.5,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AuthFieldGroup extends StatelessWidget {
+  const _AuthFieldGroup({
+    required this.emailController,
+    required this.otpController,
+    required this.codeSent,
+    required this.isLoading,
+    required this.onPrimaryAction,
+  });
+
+  final TextEditingController emailController;
+  final TextEditingController otpController;
+  final bool codeSent;
+  final bool isLoading;
+  final VoidCallback onPrimaryAction;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextField(
+          controller: emailController,
+          enabled: !codeSent,
+          keyboardType: TextInputType.emailAddress,
+          decoration: const InputDecoration(
+            labelText: 'Email address *',
+            helperText: 'This must match the email you used at registration.',
+          ),
+        ),
+        if (codeSent) ...[
+          const SizedBox(height: 20),
+          TextField(
+            controller: otpController,
+            maxLength: 6,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              labelText: '6-digit code',
+              helperText: 'You can also tap the magic link in the email if you prefer.',
+            ),
+          ),
+        ],
+        const SizedBox(height: 24),
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton(
+            onPressed: isLoading ? null : onPrimaryAction,
+            child: isLoading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Text(codeSent ? 'Verify and continue' : 'Send sign-in email'),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SignInSupportPanel extends StatelessWidget {
+  const _SignInSupportPanel();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: theme.palette.subtleCard,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Need help?',
+            style: theme.textTheme.titleMedium,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '• Search your inbox (and spam folder) for “AFCM sign-in”.\n'
+            '• Magic links expire after 5 minutes—request a new one if needed.\n'
+            '• Contact support@afcm.market if you switch email providers.',
+            style: theme.textTheme.bodySmall?.copyWith(height: 1.6),
+          ),
+        ],
+      ),
+    );
   }
 }
