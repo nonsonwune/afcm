@@ -1,6 +1,9 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 
 import '../../router/app_router.dart';
 import '../../shared/models/order_models.dart';
@@ -8,6 +11,9 @@ import '../../shared/widgets/app_shell.dart';
 import '../../style/brand_theme.dart';
 import 'application/registration_controller.dart';
 import 'models/registration_flow.dart';
+
+const _termsUrl = 'https://afcm.app/terms';
+const _privacyUrl = 'https://afcm.app/privacy';
 
 class RegistrationPage extends ConsumerStatefulWidget {
   const RegistrationPage({super.key, this.args});
@@ -24,6 +30,11 @@ class _RegistrationPageState extends ConsumerState<RegistrationPage> {
   late final TextEditingController _emailController;
   late final TextEditingController _phoneController;
   late final TextEditingController _companyController;
+  late final TapGestureRecognizer _termsRecognizer;
+  late final TapGestureRecognizer _privacyRecognizer;
+  String _selectedCurrency = 'NGN';
+  bool _acceptedTerms = false;
+  bool _termsTouched = false;
 
   @override
   void initState() {
@@ -32,6 +43,10 @@ class _RegistrationPageState extends ConsumerState<RegistrationPage> {
     _emailController = TextEditingController();
     _phoneController = TextEditingController();
     _companyController = TextEditingController();
+    _termsRecognizer = TapGestureRecognizer()
+      ..onTap = () => _openLink(_termsUrl);
+    _privacyRecognizer = TapGestureRecognizer()
+      ..onTap = () => _openLink(_privacyUrl);
   }
 
   @override
@@ -40,7 +55,18 @@ class _RegistrationPageState extends ConsumerState<RegistrationPage> {
     _emailController.dispose();
     _phoneController.dispose();
     _companyController.dispose();
+    _termsRecognizer.dispose();
+    _privacyRecognizer.dispose();
     super.dispose();
+  }
+
+  Future<void> _openLink(String url) async {
+    final success = await launchUrlString(url);
+    if (!success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Unable to open link right now.')),
+      );
+    }
   }
 
   @override
@@ -192,6 +218,96 @@ class _RegistrationPageState extends ConsumerState<RegistrationPage> {
                                 helperText:
                                     'Appears on your badge so partners can identify you quickly.',
                               ),
+                              const SizedBox(height: 20),
+                              DropdownButtonFormField<String>(
+                                value: _selectedCurrency,
+                                decoration: const InputDecoration(
+                                  labelText: 'Invoice currency',
+                                  helperText:
+                                      'Choose the currency displayed on your Paystack invoice.',
+                                ),
+                                items: const [
+                                  DropdownMenuItem(
+                                    value: 'NGN',
+                                    child: Text('Nigerian Naira (₦)'),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'USD',
+                                    child:
+                                        Text('US Dollar (shown for reference)'),
+                                  ),
+                                ],
+                                onChanged: controllerState.isLoading
+                                    ? null
+                                    : (value) => setState(() {
+                                          _selectedCurrency = value ?? 'NGN';
+                                        }),
+                              ),
+                              const SizedBox(height: 20),
+                              CheckboxListTile(
+                                value: _acceptedTerms,
+                                onChanged: controllerState.isLoading
+                                    ? null
+                                    : (value) => setState(() {
+                                          _acceptedTerms = value ?? false;
+                                          _termsTouched = true;
+                                        }),
+                                contentPadding: EdgeInsets.zero,
+                                controlAffinity:
+                                    ListTileControlAffinity.leading,
+                                title: RichText(
+                                  text: TextSpan(
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(height: 1.5),
+                                    children: [
+                                      const TextSpan(text: 'I agree to the '),
+                                      TextSpan(
+                                        text: 'AFCM terms of service',
+                                        style: TextStyle(
+                                          decoration: TextDecoration.underline,
+                                          fontWeight: FontWeight.w600,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary,
+                                        ),
+                                        recognizer: _termsRecognizer,
+                                      ),
+                                      const TextSpan(text: ' and '),
+                                      TextSpan(
+                                        text: 'privacy notice',
+                                        style: TextStyle(
+                                          decoration: TextDecoration.underline,
+                                          fontWeight: FontWeight.w600,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary,
+                                        ),
+                                        recognizer: _privacyRecognizer,
+                                      ),
+                                      const TextSpan(text: '.'),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              if (!_acceptedTerms && _termsTouched)
+                                if (!_acceptedTerms && _termsTouched)
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                        left: 12, bottom: 8),
+                                    child: Text(
+                                      'Please accept the terms to continue.',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .error,
+                                          ),
+                                    ),
+                                  ),
                               const SizedBox(height: 28),
                               SizedBox(
                                 width: double.infinity,
@@ -246,7 +362,10 @@ class _RegistrationPageState extends ConsumerState<RegistrationPage> {
                     flex: 2,
                     child: Column(
                       children: [
-                        _PassSummaryCard(args: args),
+                        _PassSummaryCard(
+                          args: args,
+                          selectedCurrency: _selectedCurrency,
+                        ),
                         const SizedBox(height: 16),
                         const _RegistrationSupportCard(),
                       ],
@@ -266,6 +385,16 @@ class _RegistrationPageState extends ConsumerState<RegistrationPage> {
       return;
     }
 
+    if (!_acceptedTerms) {
+      setState(() => _termsTouched = true);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please accept the terms to proceed.')),
+        );
+      }
+      return;
+    }
+
     final payload = CreateOrderPayload(
       passSku: args.pass.sku,
       fullName: _nameController.text.trim(),
@@ -275,6 +404,9 @@ class _RegistrationPageState extends ConsumerState<RegistrationPage> {
       company: _companyController.text.trim().isEmpty
           ? null
           : _companyController.text.trim(),
+      currency: _selectedCurrency,
+      acceptedTerms: _acceptedTerms,
+      termsVersion: registrationTermsVersion,
     );
 
     try {
@@ -290,6 +422,7 @@ class _RegistrationPageState extends ConsumerState<RegistrationPage> {
           email: payload.email,
           fullName: payload.fullName,
           role: args.role,
+          currency: _selectedCurrency,
         ),
       );
     } catch (_) {
@@ -423,13 +556,23 @@ class _ProgressBadge extends StatelessWidget {
 }
 
 class _PassSummaryCard extends StatelessWidget {
-  const _PassSummaryCard({required this.args});
+  const _PassSummaryCard({
+    required this.args,
+    required this.selectedCurrency,
+  });
 
   final RegistrationFlowArgs args;
+  final String selectedCurrency;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final nairaFormat = NumberFormat.currency(symbol: '₦', decimalDigits: 0);
+    final usdReference = args.pass.displayAmountUsd;
+    final usdDisplay = usdReference != null
+        ? 'USD ' + NumberFormat.decimalPattern().format(usdReference)
+        : null;
+    final priceNaira = nairaFormat.format(args.pass.amountNaira);
     return Card(
       margin: EdgeInsets.zero,
       color: theme.palette.subtleCard,
@@ -446,16 +589,26 @@ class _PassSummaryCard extends StatelessWidget {
             _summaryRow(
               context,
               label: 'Role',
-              value: '${args.role[0].toUpperCase()}${args.role.substring(1)}',
+              value: args.role.isEmpty
+                  ? 'Attendee'
+                  : args.role[0].toUpperCase() + args.role.substring(1),
             ),
             const SizedBox(height: 12),
             _summaryRow(context, label: 'Pass', value: args.pass.name),
             const SizedBox(height: 12),
             _summaryRow(
               context,
-              label: 'Price',
-              value: '₦${args.pass.amountNaira.toStringAsFixed(0)}',
+              label: 'Price (₦)',
+              value: priceNaira,
             ),
+            if (usdDisplay != null) ...[
+              const SizedBox(height: 12),
+              _summaryRow(
+                context,
+                label: 'USD reference',
+                value: '~ ' + usdDisplay,
+              ),
+            ],
             const SizedBox(height: 12),
             _summaryRow(
               context,
@@ -464,7 +617,9 @@ class _PassSummaryCard extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             Text(
-              'You’ll receive a Paystack invoice and email receipt immediately. Please settle payment within 48 hours to secure your seat.',
+              selectedCurrency == 'USD'
+                  ? 'Your Paystack invoice is settled in NGN. USD pricing is shown for planning only.'
+                  : 'You’ll receive a Paystack invoice and email receipt immediately. Please settle payment within 48 hours to secure your seat.',
               style: theme.textTheme.bodySmall?.copyWith(height: 1.6),
             ),
           ],
@@ -531,7 +686,7 @@ class _RegistrationSupportCard extends StatelessWidget {
             _infoRow(
               icon: Icons.support_agent,
               text:
-                  'Questions? Email tickets@afcm.market and our concierge team will assist.',
+                  'Questions? Email tickets@afcm.app and our concierge team will assist.',
             ),
           ],
         ),

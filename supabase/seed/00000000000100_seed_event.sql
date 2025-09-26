@@ -8,7 +8,7 @@ values (
   'Africa/Lagos',
   date '2025-09-23',
   date '2025-09-26',
-  'https://app.afcm.market'
+  'https://afcm.app'
 )
 on conflict (id) do update set
   event_name = excluded.event_name,
@@ -30,4 +30,3 @@ on conflict (event_date) do update set
   doors_open = excluded.doors_open,
   doors_close = excluded.doors_close,
   updated_at = now();
-

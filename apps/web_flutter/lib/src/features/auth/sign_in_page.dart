@@ -69,8 +69,10 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                   child: Text(
                     _feedback!,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color:
-                              Theme.of(context).colorScheme.primary.withOpacity(0.9),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withOpacity(0.9),
                         ),
                   ),
                 ),
@@ -220,7 +222,8 @@ class _AuthFieldGroup extends StatelessWidget {
             keyboardType: TextInputType.number,
             decoration: const InputDecoration(
               labelText: '6-digit code',
-              helperText: 'You can also tap the magic link in the email if you prefer.',
+              helperText:
+                  'You can also tap the magic link in the email if you prefer.',
             ),
           ),
         ],
@@ -267,7 +270,7 @@ class _SignInSupportPanel extends StatelessWidget {
           Text(
             '• Search your inbox (and spam folder) for “AFCM sign-in”.\n'
             '• Magic links expire after 5 minutes—request a new one if needed.\n'
-            '• Contact support@afcm.market if you switch email providers.',
+            '• Contact support@afcm.app if you switch email providers.',
             style: theme.textTheme.bodySmall?.copyWith(height: 1.6),
           ),
         ],

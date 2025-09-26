@@ -84,9 +84,6 @@ Deno.serve(async (req) => {
       config.qrSecret,
     );
 
-    const qrString = JSON.stringify(qrPayload);
-    const qrDataUrl = await generateQrPngBase64(qrString);
-
     const { raw: icsRaw, base64Content: icsBase64 } = buildTicketIcs({
       attendeeName: attendee.full_name,
       attendeeEmail: attendee.email,
@@ -96,6 +93,52 @@ Deno.serve(async (req) => {
       siteUrl: site_url,
       timezone,
     });
+
+    const qrString = JSON.stringify(qrPayload);
+    const qrDataUrl = await generateQrPngBase64(qrString);
+    const qrStoragePath = `qr/${ticketId}.png`;
+    const icsStoragePath = `tickets/${ticketId}.ics`;
+
+    const [, base64Image] = qrDataUrl.split(',');
+    if (!base64Image) {
+      throw new Error('Unable to parse QR payload image.');
+    }
+
+    const qrBytes = Uint8Array.from(atob(base64Image), (char) => char.charCodeAt(0));
+    const encoder = new TextEncoder();
+    const icsBytes = encoder.encode(icsRaw);
+
+    const { error: qrUploadError } = await supabase.storage
+      .from('tickets')
+      .upload(qrStoragePath, qrBytes, {
+        contentType: 'image/png',
+        upsert: true,
+      });
+
+    if (qrUploadError) {
+      console.error('qr upload error', qrUploadError);
+      throw new Error('Unable to store QR asset.');
+    }
+
+    const { error: icsUploadError } = await supabase.storage
+      .from('ics')
+      .upload(icsStoragePath, icsBytes, {
+        contentType: 'text/calendar',
+        upsert: true,
+      });
+
+    if (icsUploadError) {
+      console.error('ics upload error', icsUploadError);
+      throw new Error('Unable to store calendar invite.');
+    }
+
+    const { data: icsSigned, error: signedUrlError } = await supabase.storage
+      .from('ics')
+      .createSignedUrl(icsStoragePath, 60 * 60 * 24 * 30);
+
+    if (signedUrlError) {
+      console.error('ics signed url error', signedUrlError);
+    }
 
     const nowIso = dayjs().toISOString();
 
@@ -127,6 +170,21 @@ Deno.serve(async (req) => {
       throw new Error('Unable to update attendee.');
     }
 
+    const { error: auditOrderError } = await supabase.rpc('log_audit', {
+      p_action: 'order_paid',
+      p_entity: 'order',
+      p_entity_id: order.id,
+      p_metadata: {
+        source: 'paystack_webhook',
+        request_code: requestCode,
+        paystack_status: verification.data.status,
+      },
+    });
+
+    if (auditOrderError) {
+      console.error('audit order error', auditOrderError);
+    }
+
     const { data: existingTicket } = await supabase
       .from('tickets')
       .select('id')
@@ -147,12 +205,47 @@ Deno.serve(async (req) => {
         ics_base64: icsBase64,
         metadata: {
           qr_data_url: qrDataUrl,
+          qr_storage_path: qrStoragePath,
+          ics_storage_path: icsStoragePath,
+          ics_signed_url: icsSigned?.signedUrl ?? null,
         },
       });
 
       if (ticketInsertError) {
         console.error('ticket insert error', ticketInsertError);
         throw new Error('Unable to issue ticket.');
+      }
+
+      const { error: auditTicketError } = await supabase.rpc('log_audit', {
+        p_action: 'ticket_issued',
+        p_entity: 'ticket',
+        p_entity_id: ticketId,
+        p_metadata: {
+          order_id: order.id,
+          attendee_id: attendee.id,
+          pass_id: passProduct.id,
+        },
+      });
+
+      if (auditTicketError) {
+        console.error('audit ticket error', auditTicketError);
+      }
+    } else {
+      const { error: ticketUpdateError } = await supabase
+        .from('tickets')
+        .update({
+          metadata: {
+            qr_data_url: qrDataUrl,
+            qr_storage_path: qrStoragePath,
+            ics_storage_path: icsStoragePath,
+            ics_signed_url: icsSigned?.signedUrl ?? null,
+          },
+          ics_base64: icsBase64,
+        })
+        .eq('id', existingTicket.id);
+
+      if (ticketUpdateError) {
+        console.error('ticket update error', ticketUpdateError);
       }
     }
 
@@ -183,6 +276,7 @@ Deno.serve(async (req) => {
         order_id: order.id,
         attendee_id: attendee.id,
         ticket_id: ticketId,
+        ics_storage_path: icsStoragePath,
       },
     });
 

@@ -116,7 +116,8 @@ class _TicketErrorState extends StatelessWidget {
               children: [
                 Text(message),
                 const SizedBox(height: 12),
-                OutlinedButton(onPressed: onRetry, child: const Text('Try again')),
+                OutlinedButton(
+                    onPressed: onRetry, child: const Text('Try again')),
               ],
             ),
           ),
@@ -180,7 +181,7 @@ class _TicketSupportCard extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'If you changed devices or can’t access your ticket, email tickets@afcm.market. Our concierge team can reissue your QR code instantly.',
+                'If you changed devices or can’t access your ticket, email tickets@afcm.app. Our concierge team can reissue your QR code instantly.',
                 style: theme.textTheme.bodySmall?.copyWith(height: 1.6),
               ),
             ],
@@ -322,6 +323,9 @@ class _TicketCard extends StatelessWidget {
   void _downloadIcs(Ticket ticket) {
     final base64Data = ticket.icsBase64;
     if (base64Data == null || base64Data.isEmpty) {
+      if (ticket.icsSignedUrl != null && ticket.icsSignedUrl!.isNotEmpty) {
+        html.window.open(ticket.icsSignedUrl!, '_blank');
+      }
       return;
     }
     final bytes = base64Decode(base64Data);

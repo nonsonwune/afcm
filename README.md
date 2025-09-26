@@ -8,6 +8,11 @@ This monorepo hosts the Flutter web app and Supabase backend for the African Fil
 - `supabase` — SQL migrations, seed data, and Edge Functions for server logic.
 - `.docs` — Project documentation, technical requirements, and task lists.
 
+Key surfaces for Module 1:
+
+- Public: `/passes`, `/register`, `/register/status`, `/me/profile`, `/me/ticket`.
+- Staff console (authenticated): `/staff/orders` and `/staff/attendees` for monitoring, manual overrides, and audit visibility.
+
 ## Getting Started
 
 1. Ensure Flutter and Supabase CLI are installed locally.

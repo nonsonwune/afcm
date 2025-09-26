@@ -10,6 +10,8 @@ import '../features/registration/registration_page.dart';
 import '../features/registration/registration_status_page.dart';
 import '../features/registration/models/registration_flow.dart';
 import '../features/ticket/my_ticket_page.dart';
+import '../features/staff/staff_attendees_page.dart';
+import '../features/staff/staff_orders_page.dart';
 
 enum AppRoute {
   passes('/passes'),
@@ -17,7 +19,9 @@ enum AppRoute {
   registrationStatus('/register/status'),
   myTicket('/me/ticket'),
   profile('/me/profile'),
-  signIn('/sign-in');
+  signIn('/sign-in'),
+  staffOrders('/staff/orders'),
+  staffAttendees('/staff/attendees');
 
   const AppRoute(this.path);
 
@@ -69,12 +73,24 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         name: AppRoute.profile.name,
         builder: (context, state) => const ProfilePage(),
       ),
+      GoRoute(
+        path: AppRoute.staffOrders.path,
+        name: AppRoute.staffOrders.name,
+        builder: (context, state) => const StaffOrdersPage(),
+      ),
+      GoRoute(
+        path: AppRoute.staffAttendees.path,
+        name: AppRoute.staffAttendees.name,
+        builder: (context, state) => const StaffAttendeesPage(),
+      ),
     ],
     redirect: (context, state) {
       final isLoggedIn = ref.read(isAuthenticatedProvider);
       final loggingIn = state.matchedLocation == AppRoute.signIn.path;
 
-      if (!isLoggedIn && state.matchedLocation.startsWith('/me')) {
+      if (!isLoggedIn &&
+          (state.matchedLocation.startsWith('/me') ||
+              state.matchedLocation.startsWith('/staff'))) {
         return AppRoute.signIn.path;
       }
       if (isLoggedIn && loggingIn) {

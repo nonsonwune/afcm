@@ -11,7 +11,7 @@
      QR_SECRET=choose-a-secret \
      SITE_URL=https://afcm-web.vercel.app \
      TZ=Africa/Lagos \
-     EMAIL_FROM="AFCM Tickets <tickets@afcm.market>"
+     EMAIL_FROM="AFCM Tickets <tickets@afcm.app>"
    ```
 2. Apply migrations and seed data:
    ```bash
@@ -44,7 +44,8 @@ flutter run -d chrome \
 2. Complete the form → confirm a Paystack invoice email is generated.
 3. Trigger Paystack payment (or simulate via `paystack-cli`) → confirm webhook issues a ticket and sends confirmation email/ICS.
 4. Sign in with the registered email (OTP) → `/me/ticket` should show the cached QR and allow ICS download even offline.
-5. Validate shared preferences were populated by reloading in offline mode.
+5. Reload `/me/ticket` in offline mode to confirm the cached ticket renders from shared preferences and the service worker fallback.
+6. Staff sign-in: visit `/staff/orders` to review live transactions; mark a pending test order as paid and confirm audit trail updates.
 
 ## Follow-up
 

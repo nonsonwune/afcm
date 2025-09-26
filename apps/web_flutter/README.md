@@ -24,7 +24,7 @@ flutter build web \
   --release \
   --dart-define=SUPABASE_URL=https://your-project.supabase.co \
   --dart-define=SUPABASE_ANON_KEY=anon-key \
-  --dart-define=SITE_URL=https://app.afcm.market
+  --dart-define=SITE_URL=https://afcm.app
 ```
 
 ## Deploying to Vercel (prebuilt)
@@ -34,7 +34,7 @@ When the Flutter bundle is ready, ship it to Vercel as a static site:
 ```bash
 export SUPABASE_URL=https://fbhpejawdjokhpaewxoo.supabase.co
 export SUPABASE_ANON_KEY=anon-key
-export SITE_URL=https://afcm-web.vercel.app # or your custom domain
+export SITE_URL=https://afcm.app # or your custom domain
 
 scripts/build-web.sh
 vercel deploy --prebuilt --prod

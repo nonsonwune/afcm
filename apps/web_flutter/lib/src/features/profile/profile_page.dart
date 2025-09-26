@@ -97,10 +97,7 @@ class ProfilePage extends ConsumerWidget {
                       const SizedBox(height: 6),
                       Text(
                         email,
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyMedium
-                            ?.copyWith(
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: Theme.of(context)
                                   .colorScheme
                                   .onSurface
@@ -235,7 +232,8 @@ class _ProfileErrorState extends StatelessWidget {
               children: [
                 Text(message),
                 const SizedBox(height: 12),
-                OutlinedButton(onPressed: onRetry, child: const Text('Try again')),
+                OutlinedButton(
+                    onPressed: onRetry, child: const Text('Try again')),
               ],
             ),
           ),
@@ -295,7 +293,8 @@ class _ProfileBadgeRow extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(paid ? Icons.verified : Icons.hourglass_top, size: 18, color: color),
+          Icon(paid ? Icons.verified : Icons.hourglass_top,
+              size: 18, color: color),
           const SizedBox(width: 8),
           Text(
             paid ? 'Ticket ready' : 'Payment pending',

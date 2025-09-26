@@ -11,6 +11,9 @@ class Ticket {
     required this.qrChecksum,
     required this.qrDataUrl,
     this.icsBase64,
+    this.qrStoragePath,
+    this.icsStoragePath,
+    this.icsSignedUrl,
   });
 
   factory Ticket.fromMap(Map<String, dynamic> map) {
@@ -34,6 +37,9 @@ class Ticket {
       qrChecksum: (map['qr_checksum'] ?? '') as String,
       qrDataUrl: (metadata['qr_data_url'] as String?) ?? '',
       icsBase64: map['ics_base64'] as String?,
+      qrStoragePath: metadata['qr_storage_path'] as String?,
+      icsStoragePath: metadata['ics_storage_path'] as String?,
+      icsSignedUrl: metadata['ics_signed_url'] as String?,
     );
   }
 
@@ -46,6 +52,9 @@ class Ticket {
   final String qrChecksum;
   final String qrDataUrl;
   final String? icsBase64;
+  final String? qrStoragePath;
+  final String? icsStoragePath;
+  final String? icsSignedUrl;
 
   String get payloadJson => qrPayload.isEmpty ? '{}' : jsonEncode(qrPayload);
 
@@ -60,6 +69,9 @@ class Ticket {
       'qr_checksum': qrChecksum,
       'qr_data_url': qrDataUrl,
       'ics_base64': icsBase64,
+      'qr_storage_path': qrStoragePath,
+      'ics_storage_path': icsStoragePath,
+      'ics_signed_url': icsSignedUrl,
     };
   }
 
@@ -76,6 +88,9 @@ class Ticket {
       qrChecksum: (json['qr_checksum'] ?? '') as String,
       qrDataUrl: (json['qr_data_url'] ?? '') as String,
       icsBase64: json['ics_base64'] as String?,
+      qrStoragePath: json['qr_storage_path'] as String?,
+      icsStoragePath: json['ics_storage_path'] as String?,
+      icsSignedUrl: json['ics_signed_url'] as String?,
     );
   }
 }

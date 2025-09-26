@@ -55,7 +55,8 @@ class AfcmTheme {
           textStyle: const TextStyle(fontWeight: FontWeight.w600),
           backgroundColor: _azure500,
           foregroundColor: _white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         ),
       ),
       appBarTheme: const AppBarTheme(
@@ -81,7 +82,8 @@ class AfcmTheme {
           borderSide: const BorderSide(color: _azure400, width: 1.5),
           borderRadius: BorderRadius.circular(16),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         hintStyle: const TextStyle(color: _slate500),
       ),
       snackBarTheme: SnackBarThemeData(
@@ -137,7 +139,8 @@ class AfcmTheme {
           textStyle: const TextStyle(fontWeight: FontWeight.w600),
           backgroundColor: _azure400,
           foregroundColor: _white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         ),
       ),
       appBarTheme: const AppBarTheme(
@@ -147,8 +150,7 @@ class AfcmTheme {
         foregroundColor: _white,
         surfaceTintColor: Colors.transparent,
       ),
-      dividerTheme:
-          DividerThemeData(color: _slate700.withOpacity(0.6)),
+      dividerTheme: DividerThemeData(color: _slate700.withOpacity(0.6)),
       listTileTheme: const ListTileThemeData(
         iconColor: _slate200,
         textColor: _slate100,
@@ -157,14 +159,15 @@ class AfcmTheme {
         filled: true,
         fillColor: _slate900,
         border: OutlineInputBorder(
-        borderSide: BorderSide(color: _slate700.withOpacity(0.7)),
+          borderSide: BorderSide(color: _slate700.withOpacity(0.7)),
           borderRadius: BorderRadius.circular(16),
         ),
         focusedBorder: OutlineInputBorder(
           borderSide: const BorderSide(color: _azure400, width: 1.5),
           borderRadius: BorderRadius.circular(16),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         hintStyle: TextStyle(color: _slate500.withOpacity(0.9)),
       ),
       snackBarTheme: SnackBarThemeData(

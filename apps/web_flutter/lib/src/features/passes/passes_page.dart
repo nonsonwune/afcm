@@ -47,7 +47,8 @@ class PassesPage extends ConsumerWidget {
         data: (passes) => _PassCatalogue(
           passes: passes,
           selectedRole: selectedRole,
-          onRoleSelected: (role) => ref.read(_selectedRoleProvider.notifier).state = role,
+          onRoleSelected: (role) =>
+              ref.read(_selectedRoleProvider.notifier).state = role,
           onSelectPass: (pass) => context.pushNamed(
             AppRoute.register.name,
             extra: RegistrationFlowArgs(pass: pass, role: selectedRole),
@@ -241,8 +242,7 @@ class _PassCard extends StatelessWidget {
                       Text(
                         pass.validityLabel,
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurface
-                              .withOpacity(0.64),
+                          color: theme.colorScheme.onSurface.withOpacity(0.64),
                         ),
                       ),
                     ],

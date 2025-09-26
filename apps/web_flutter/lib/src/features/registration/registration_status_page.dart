@@ -56,7 +56,11 @@ class RegistrationStatusPage extends ConsumerWidget {
         onPressed: () => context.goNamed(AppRoute.profile.name),
         child: const Text('Go to profile'),
       ),
-      hero: _StatusHero(email: args.email, hostedLink: args.result.hostedLink),
+      hero: _StatusHero(
+        email: args.email,
+        hostedLink: args.result.hostedLink,
+        currency: args.currency,
+      ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -143,6 +147,9 @@ class RegistrationStatusPage extends ConsumerWidget {
       email: args.email,
       attendeeRole: args.role,
       resendInvoice: true,
+      currency: args.currency,
+      acceptedTerms: true,
+      termsVersion: registrationTermsVersion,
     );
 
     try {
@@ -235,10 +242,15 @@ class _ProgressBadge extends StatelessWidget {
 }
 
 class _StatusHero extends StatelessWidget {
-  const _StatusHero({required this.email, required this.hostedLink});
+  const _StatusHero({
+    required this.email,
+    required this.hostedLink,
+    required this.currency,
+  });
 
   final String email;
   final String hostedLink;
+  final String currency;
 
   @override
   Widget build(BuildContext context) {
@@ -256,6 +268,16 @@ class _StatusHero extends StatelessWidget {
           style: theme.textTheme.bodyLarge?.copyWith(
             color: theme.colorScheme.onSurface.withOpacity(0.78),
             height: 1.5,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          currency.toUpperCase() == 'USD'
+              ? 'Heads up: Paystack collects funds in NGN. USD pricing is included in the invoice for reference.'
+              : 'All charges will appear in NGN via Paystack secure checkout.',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurface.withOpacity(0.7),
+            height: 1.6,
           ),
         ),
         if (hostedLink.isNotEmpty) ...[
@@ -291,7 +313,7 @@ class _StatusSupportCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'Invoices usually arrive within 2 minutes. If you still don’t see it, use “Resend invoice email” above or contact tickets@afcm.market.',
+              'Invoices usually arrive within 2 minutes. If you still don’t see it, use “Resend invoice email” above or contact tickets@afcm.app.',
               style: theme.textTheme.bodySmall?.copyWith(height: 1.6),
             ),
           ],

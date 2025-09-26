@@ -14,6 +14,9 @@ interface CreateOrderInput {
   company?: string;
   attendee_role: string;
   resend_invoice?: boolean;
+  currency?: string;
+  accepted_terms?: boolean;
+  terms_version?: string;
 }
 
 interface JsonResponse {
@@ -24,6 +27,8 @@ interface JsonResponse {
 
 const config = loadConfig();
 const supabase = getSupabaseClient();
+
+const ALLOWED_CURRENCIES = ['NGN', 'USD'] as const;
 
 function jsonResponse(body: JsonResponse, init?: ResponseInit) {
   return new Response(JSON.stringify(body), {
@@ -97,39 +102,50 @@ Deno.serve(async (req) => {
       });
     }
 
-    const attendeeId = await upsertPendingAttendee({
-      email,
-      passProductId: passProduct.id,
-      attendeeRole: input.attendee_role,
-      fullName: input.full_name,
-      phone: input.phone,
-      company: input.company,
-    });
-    const orderId = crypto.randomUUID();
+    const currencyPreference = (input.currency ?? passProduct.currency).toUpperCase();
+
+    const registrationMetadata = {
+      attendee_role: input.attendee_role,
+      attendee_email: email,
+      attendee_name: input.full_name,
+      pass_sku: passSku,
+      currency_preference: currencyPreference,
+      terms_version: input.terms_version ?? null,
+      accepted_terms: Boolean(input.accepted_terms),
+    };
+
+    const { data: registrationData, error: registrationError } = await supabase
+      .rpc('create_pending_registration', {
+        p_pass_product_id: passProduct.id,
+        p_attendee_role: input.attendee_role,
+        p_full_name: input.full_name,
+        p_email: email,
+        p_phone: input.phone ?? null,
+        p_company: input.company ?? null,
+        p_currency: passProduct.currency,
+        p_amount_kobo: passProduct.amount_kobo,
+        p_metadata: registrationMetadata,
+      });
+
+    if (registrationError) {
+      console.error('registration rpc error', registrationError);
+      throw new Error('Unable to prepare attendee registration.');
+    }
+
+    const registrationRow = Array.isArray(registrationData)
+      ? (registrationData[0] as { attendee_id: string; order_id: string } | undefined)
+      : (registrationData as { attendee_id: string; order_id: string } | undefined);
+
+    if (!registrationRow) {
+      throw new Error('Registration could not be created.');
+    }
+
+    const attendeeId = registrationRow.attendee_id;
+    const orderId = registrationRow.order_id;
 
     const expiresAt = dayjs().add(48, 'hour').toISOString();
 
     const description = `${passProduct.name} – AFCM 2025`;
-
-    const { error: orderInsertError } = await supabase.from('orders').insert({
-      id: orderId,
-      attendee_id: attendeeId,
-      pass_product_id: passProduct.id,
-      status: 'pending',
-      amount_kobo: passProduct.amount_kobo,
-      currency: passProduct.currency,
-      expires_at: expiresAt,
-      metadata: {
-        attendee_role: input.attendee_role,
-        attendee_email: email,
-        attendee_name: input.full_name,
-      },
-    });
-
-    if (orderInsertError) {
-      console.error('order insert error', orderInsertError);
-      throw new Error('Unable to create order.');
-    }
 
     const paymentRequest = await createPaymentRequest(
       {
@@ -143,6 +159,7 @@ Deno.serve(async (req) => {
           attendee_id: attendeeId,
           pass_sku: passSku,
           attendee_role: input.attendee_role,
+          currency_preference: currencyPreference,
         },
         line_items: [
           {
@@ -218,6 +235,20 @@ function validatePayload(payload: Partial<CreateOrderInput> | null): string | nu
     return 'Invalid attendee role.';
   }
 
+  const currency = (payload.currency ?? 'NGN').toUpperCase();
+  if (!ALLOWED_CURRENCIES.includes(currency as typeof ALLOWED_CURRENCIES[number])) {
+    return 'Unsupported currency selection.';
+  }
+
+  if (!payload.resend_invoice) {
+    if (!payload.accepted_terms) {
+      return 'Terms must be accepted before continuing.';
+    }
+    if (!payload.terms_version || payload.terms_version.trim().length === 0) {
+      return 'Missing terms version.';
+    }
+  }
+
   return null;
 }
 
@@ -258,77 +289,4 @@ async function findPendingOrderByEmail(email: string) {
     paystack_request_code: order.paystack_request_code,
     hosted_link: order.paystack_invoice_url,
   };
-}
-
-async function upsertPendingAttendee({
-  email,
-  passProductId,
-  attendeeRole,
-  fullName,
-  phone,
-  company,
-}: {
-  email: string;
-  passProductId: string;
-  attendeeRole: string;
-  fullName: string;
-  phone?: string;
-  company?: string;
-}) {
-  const { data, error } = await supabase
-    .from('attendees')
-    .select('id')
-    .eq('email', email)
-    .eq('status', 'UNPAID')
-    .maybeSingle();
-
-  if (error && error.code !== 'PGRST116') {
-    console.error('lookup attendee error', error);
-    throw new Error('Unable to prepare attendee record.');
-  }
-
-  if (data?.id) {
-    const { error: updateError } = await supabase
-      .from('attendees')
-      .update({
-        pass_product_id: passProductId,
-        attendee_role: attendeeRole,
-        full_name: fullName,
-        phone,
-        company,
-        metadata: {
-          source: 'web',
-          refreshed_at: new Date().toISOString(),
-        },
-      })
-      .eq('id', data.id);
-
-    if (updateError) {
-      console.error('update attendee error', updateError);
-      throw new Error('Unable to update attendee.');
-    }
-    return data.id as string;
-  }
-
-  const attendeeId = crypto.randomUUID();
-  const { error: insertError } = await supabase.from('attendees').insert({
-    id: attendeeId,
-    pass_product_id: passProductId,
-    attendee_role: attendeeRole,
-    full_name: fullName,
-    email,
-    phone,
-    company,
-    status: 'UNPAID',
-    metadata: {
-      source: 'web',
-    },
-  });
-
-  if (insertError) {
-    console.error('insert attendee error', insertError);
-    throw new Error('Unable to create attendee record.');
-  }
-
-  return attendeeId;
 }
