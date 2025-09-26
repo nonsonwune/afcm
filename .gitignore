@@ -28,6 +28,7 @@ apps/web_flutter/.flutter-plugins*
 apps/web_flutter/.dart_tool/
 apps/web_flutter/.metadata
 apps/web_flutter/.packages
+.env.local
 
 # IDE
 .vscode/
