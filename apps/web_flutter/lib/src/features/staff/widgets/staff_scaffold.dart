@@ -26,7 +26,8 @@ class StaffScaffold extends ConsumerWidget {
       loading: () => const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       ),
-      error: (error, _) => _AccessDenied(message: 'Unable to verify staff access: $error'),
+      error: (error, _) =>
+          _AccessDenied(message: 'Unable to verify staff access: $error'),
       data: (isStaff) {
         if (!isStaff) {
           return const Scaffold(
@@ -55,7 +56,8 @@ class StaffScaffold extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
                   child: Row(
                     children: [
                       Text(
@@ -76,7 +78,8 @@ class StaffScaffold extends ConsumerWidget {
                       ),
                       const SizedBox(width: 12),
                       TextButton(
-                        onPressed: () => ref.read(authRepositoryProvider).signOut(),
+                        onPressed: () =>
+                            ref.read(authRepositoryProvider).signOut(),
                         child: const Text('Sign out'),
                       ),
                     ],
@@ -110,7 +113,8 @@ class StaffScaffold extends ConsumerWidget {
                   child: Container(
                     decoration: BoxDecoration(
                       color: theme.colorScheme.surface,
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                      borderRadius:
+                          const BorderRadius.vertical(top: Radius.circular(28)),
                     ),
                     child: child,
                   ),
@@ -150,7 +154,8 @@ class _AccessDenied extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.lock_outline, size: 48, color: theme.colorScheme.primary),
+            Icon(Icons.lock_outline,
+                size: 48, color: theme.colorScheme.primary),
             const SizedBox(height: 16),
             Text(
               'Staff access required',

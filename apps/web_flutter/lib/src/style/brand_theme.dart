@@ -34,12 +34,6 @@ class AfcmTheme {
       colorScheme: colorScheme,
       scaffoldBackgroundColor: const Color(0xFFF8FAFC),
       textTheme: _textTheme,
-      cardTheme: CardThemeData(
-        color: _white,
-        elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        margin: EdgeInsets.zero,
-      ),
       chipTheme: ChipThemeData.fromDefaults(
         primaryColor: _azure500,
         secondaryColor: _slate100,
@@ -120,11 +114,6 @@ class AfcmTheme {
       colorScheme: colorScheme,
       scaffoldBackgroundColor: _slate950,
       textTheme: _textTheme.apply(bodyColor: _slate100, displayColor: _white),
-      cardTheme: CardThemeData(
-        color: _slate900,
-        elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      ),
       chipTheme: ChipThemeData.fromDefaults(
         primaryColor: _azure400,
         secondaryColor: _slate700,

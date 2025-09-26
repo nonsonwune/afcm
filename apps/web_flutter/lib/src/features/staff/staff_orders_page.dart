@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import 'application/staff_providers.dart';
-import 'data/staff_repository.dart';
 import 'widgets/staff_scaffold.dart';
 import '../../style/brand_theme.dart';
 
@@ -46,24 +45,27 @@ class _StaffOrdersPageState extends ConsumerState<StaffOrdersPage> {
                   label: 'Pending',
                   value: 'pending',
                   groupValue: statusFilter,
-                  onSelected: (value) =>
-                      ref.read(_orderStatusFilterProvider.notifier).state = value,
+                  onSelected: (value) => ref
+                      .read(_orderStatusFilterProvider.notifier)
+                      .state = value,
                 ),
                 const SizedBox(width: 8),
                 _StatusFilterChip(
                   label: 'Paid',
                   value: 'paid',
                   groupValue: statusFilter,
-                  onSelected: (value) =>
-                      ref.read(_orderStatusFilterProvider.notifier).state = value,
+                  onSelected: (value) => ref
+                      .read(_orderStatusFilterProvider.notifier)
+                      .state = value,
                 ),
                 const SizedBox(width: 8),
                 _StatusFilterChip(
                   label: 'All',
                   value: 'all',
                   groupValue: statusFilter,
-                  onSelected: (value) =>
-                      ref.read(_orderStatusFilterProvider.notifier).state = value,
+                  onSelected: (value) => ref
+                      .read(_orderStatusFilterProvider.notifier)
+                      .state = value,
                 ),
               ],
             ),
@@ -73,7 +75,8 @@ class _StaffOrdersPageState extends ConsumerState<StaffOrdersPage> {
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (error, _) => _ErrorState(
                   message: 'Unable to load orders: $error',
-                  onRetry: () => ref.invalidate(staffOrdersProvider(statusFilter)),
+                  onRetry: () =>
+                      ref.invalidate(staffOrdersProvider(statusFilter)),
                 ),
                 data: (orders) {
                   if (orders.isEmpty) {
@@ -90,7 +93,8 @@ class _StaffOrdersPageState extends ConsumerState<StaffOrdersPage> {
                       separatorBuilder: (_, __) => const SizedBox(height: 16),
                       itemBuilder: (context, index) {
                         final order = orders[index];
-                        final amountDisplay = order.currency.toUpperCase() == 'NGN'
+                        final amountDisplay = order.currency.toUpperCase() ==
+                                'NGN'
                             ? _currencyFormat.format(order.amountMajor)
                             : '${order.currency.toUpperCase()} ${NumberFormat.decimalPattern().format(order.amountMajor)}';
                         final processing = _pendingActions.contains(order.id);
@@ -108,7 +112,8 @@ class _StaffOrdersPageState extends ConsumerState<StaffOrdersPage> {
                                       style: Theme.of(context)
                                           .textTheme
                                           .titleMedium
-                                          ?.copyWith(fontWeight: FontWeight.w600),
+                                          ?.copyWith(
+                                              fontWeight: FontWeight.w600),
                                     ),
                                     const Spacer(),
                                     _StatusBadge(status: order.status),
@@ -154,8 +159,10 @@ class _StaffOrdersPageState extends ConsumerState<StaffOrdersPage> {
                                 Row(
                                   children: [
                                     FilledButton.icon(
-                                      onPressed: (order.status == 'pending' && !processing)
-                                          ? () => _markPaid(context, order.id, statusFilter)
+                                      onPressed: (order.status == 'pending' &&
+                                              !processing)
+                                          ? () => _markPaid(
+                                              context, order.id, statusFilter)
                                           : null,
                                       icon: processing
                                           ? const SizedBox(
@@ -169,8 +176,10 @@ class _StaffOrdersPageState extends ConsumerState<StaffOrdersPage> {
                                     ),
                                     const SizedBox(width: 12),
                                     OutlinedButton.icon(
-                                      onPressed: (order.status == 'pending' && !processing)
-                                          ? () => _markFailed(context, order.id, statusFilter)
+                                      onPressed: (order.status == 'pending' &&
+                                              !processing)
+                                          ? () => _markFailed(
+                                              context, order.id, statusFilter)
                                           : null,
                                       icon: const Icon(Icons.cancel),
                                       label: const Text('Mark failed'),
@@ -199,20 +208,17 @@ class _StaffOrdersPageState extends ConsumerState<StaffOrdersPage> {
     final repository = ref.read(staffRepositoryProvider);
     try {
       await repository.markOrderPaid(orderId);
+      if (!mounted) return;
       ref.invalidate(staffOrdersProvider(statusFilter));
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('Order marked paid.')));
-      }
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Order marked paid.')));
     } catch (error) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Unable to mark paid: $error')));
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Unable to mark paid: $error')));
     } finally {
-      if (mounted) {
-        setState(() => _pendingActions.remove(orderId));
-      }
+      if (!mounted) return;
+      setState(() => _pendingActions.remove(orderId));
     }
   }
 
@@ -222,20 +228,17 @@ class _StaffOrdersPageState extends ConsumerState<StaffOrdersPage> {
     final repository = ref.read(staffRepositoryProvider);
     try {
       await repository.markOrderFailed(orderId);
+      if (!mounted) return;
       ref.invalidate(staffOrdersProvider(statusFilter));
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Order marked as failed.')));
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Order marked as failed.')));
     } catch (error) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Unable to update order: $error')));
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Unable to update order: $error')));
     } finally {
-      if (mounted) {
-        setState(() => _pendingActions.remove(orderId));
-      }
+      if (!mounted) return;
+      setState(() => _pendingActions.remove(orderId));
     }
   }
 }

@@ -10,7 +10,7 @@ final staffRepositoryProvider = Provider<StaffRepository>((ref) {
 
 final isStaffProvider = FutureProvider<bool>((ref) async {
   final session = ref.watch(supabaseSessionProvider);
-  final userId = session?.user?.id;
+  final userId = session?.user.id;
   if (userId == null) {
     return false;
   }

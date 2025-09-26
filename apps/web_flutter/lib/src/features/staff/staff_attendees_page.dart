@@ -4,7 +4,6 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 import 'application/staff_providers.dart';
-import 'data/staff_repository.dart';
 import 'widgets/staff_scaffold.dart';
 import '../../style/brand_theme.dart';
 
@@ -39,13 +38,15 @@ class StaffAttendeesPage extends ConsumerWidget {
                   value: statusFilter,
                   onChanged: (value) {
                     if (value == null) return;
-                    ref.read(_attendeeStatusFilterProvider.notifier).state = value;
+                    ref.read(_attendeeStatusFilterProvider.notifier).state =
+                        value;
                   },
                   items: const [
                     DropdownMenuItem(value: 'all', child: Text('All statuses')),
                     DropdownMenuItem(value: 'PAID', child: Text('Paid')),
                     DropdownMenuItem(value: 'UNPAID', child: Text('Unpaid')),
-                    DropdownMenuItem(value: 'CANCELLED', child: Text('Cancelled')),
+                    DropdownMenuItem(
+                        value: 'CANCELLED', child: Text('Cancelled')),
                   ],
                 ),
               ],
@@ -56,7 +57,8 @@ class StaffAttendeesPage extends ConsumerWidget {
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (error, _) => _ErrorState(
                   message: 'Unable to load attendees: $error',
-                  onRetry: () => ref.invalidate(staffAttendeesProvider(statusFilter)),
+                  onRetry: () =>
+                      ref.invalidate(staffAttendeesProvider(statusFilter)),
                 ),
                 data: (attendees) {
                   if (attendees.isEmpty) {
@@ -89,7 +91,8 @@ class StaffAttendeesPage extends ConsumerWidget {
                                       style: Theme.of(context)
                                           .textTheme
                                           .titleMedium
-                                          ?.copyWith(fontWeight: FontWeight.w600),
+                                          ?.copyWith(
+                                              fontWeight: FontWeight.w600),
                                     ),
                                     const Spacer(),
                                     _StatusBadge(status: attendee.status),
@@ -134,12 +137,13 @@ class StaffAttendeesPage extends ConsumerWidget {
                                   const SizedBox(height: 12),
                                   Text(
                                     'Latest order: ${firstOrder.status.toUpperCase()} • ${firstOrder.invoiceUrl.isEmpty ? 'No invoice' : 'Invoice link available'}',
-                                    style: Theme.of(context).textTheme.bodySmall,
+                                    style:
+                                        Theme.of(context).textTheme.bodySmall,
                                   ),
                                   if (firstOrder.invoiceUrl.isNotEmpty)
                                     TextButton.icon(
-                                      onPressed: () =>
-                                          _openInvoice(context, firstOrder.invoiceUrl),
+                                      onPressed: () => _openInvoice(
+                                          context, firstOrder.invoiceUrl),
                                       icon: const Icon(Icons.open_in_new),
                                       label: const Text('Open invoice'),
                                     ),
@@ -163,6 +167,7 @@ class StaffAttendeesPage extends ConsumerWidget {
   Future<void> _openInvoice(BuildContext context, String url) async {
     if (url.isEmpty) return;
     final opened = await launchUrlString(url);
+    if (!context.mounted) return;
     if (!opened) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Unable to open invoice link.')),

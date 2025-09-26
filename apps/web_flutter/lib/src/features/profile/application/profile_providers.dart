@@ -13,11 +13,11 @@ final attendeeProfileProvider =
     FutureProvider.autoDispose<Map<String, dynamic>?>((ref) async {
   final session = ref.watch(supabaseSessionProvider);
   final repository = ref.watch(profileRepositoryProvider);
-  final email = session?.user?.email;
+  final email = session?.user.email;
   if (email != null) {
     await ref.watch(ticketRepositoryProvider).claimAttendeeRecords(email);
   }
-  final userId = session?.user?.id;
+  final userId = session?.user.id;
   if (userId == null) {
     return null;
   }

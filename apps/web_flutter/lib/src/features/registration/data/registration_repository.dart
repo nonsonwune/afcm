@@ -1,4 +1,3 @@
-import 'package:functions_client/functions_client.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../shared/models/order_models.dart';

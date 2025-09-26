@@ -25,8 +25,9 @@ final ticketProvider = FutureProvider.autoDispose((ref) async {
   final session = ref.watch(supabaseSessionProvider);
   final store = await ref.watch(ticketLocalStoreProvider.future);
 
-  if (session?.user?.email != null) {
-    await repository.claimAttendeeRecords(session!.user!.email!);
+  final email = session?.user.email;
+  if (email != null) {
+    await repository.claimAttendeeRecords(email);
   }
 
   try {
