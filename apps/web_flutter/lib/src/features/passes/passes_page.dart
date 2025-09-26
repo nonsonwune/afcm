@@ -14,7 +14,7 @@ import '../registration/models/registration_flow.dart';
 final _selectedRoleProvider =
     StateProvider.autoDispose<String>((ref) => 'investor');
 
-class PassesPage extends ConsumerWidget {
+class PassesPage extends ConsumerStatefulWidget {
   const PassesPage({super.key});
 
   static final _roles = <Map<String, String>>[
@@ -25,7 +25,14 @@ class PassesPage extends ConsumerWidget {
   ];
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PassesPage> createState() => _PassesPageState();
+}
+
+class _PassesPageState extends ConsumerState<PassesPage> {
+  PassProduct? _selectedPass;
+
+  @override
+  Widget build(BuildContext context) {
     final passesAsync = ref.watch(passCatalogueProvider);
     final selectedRole = ref.watch(_selectedRoleProvider);
     final isAuthenticated = ref.watch(isAuthenticatedProvider);
@@ -44,17 +51,53 @@ class PassesPage extends ConsumerWidget {
           child: Center(child: CircularProgressIndicator()),
         ),
         error: (error, _) => _ErrorState(error: error),
-        data: (passes) => _PassCatalogue(
-          passes: passes,
-          selectedRole: selectedRole,
-          onRoleSelected: (role) =>
-              ref.read(_selectedRoleProvider.notifier).state = role,
-          onSelectPass: (pass) => context.pushNamed(
-            AppRoute.register.name,
-            extra: RegistrationFlowArgs(pass: pass, role: selectedRole),
-          ),
+        data: (passes) => Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _PassCatalogue(
+              passes: passes,
+              selectedRole: selectedRole,
+              selectedPass: _selectedPass,
+              onRoleSelected: (role) {
+                ref.read(_selectedRoleProvider.notifier).state = role;
+                setState(() => _selectedPass = null);
+              },
+              onSelectPass: (pass) {
+                setState(() => _selectedPass = pass);
+              },
+              onContinue: (pass) => _navigateToRegistration(pass, selectedRole),
+            ),
+            const SizedBox(height: 24),
+            if (_selectedPass != null)
+              FilledButton.icon(
+                onPressed: () =>
+                    _navigateToRegistration(_selectedPass!, selectedRole),
+                icon: const Icon(Icons.arrow_forward),
+                label: Text(
+                  'Continue to registration as '
+                  '${selectedRole[0].toUpperCase()}${selectedRole.substring(1)}',
+                ),
+              )
+            else if (passes.isEmpty)
+              const _EmptyCatalogueNotice()
+            else
+              Text(
+                'Select a pass above to continue.',
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.copyWith(height: 1.5),
+              ),
+          ],
         ),
       ),
+    );
+  }
+
+  void _navigateToRegistration(PassProduct pass, String role) {
+    context.pushNamed(
+      AppRoute.register.name,
+      extra: RegistrationFlowArgs(pass: pass, role: role),
     );
   }
 }
@@ -91,14 +134,18 @@ class _PassCatalogue extends StatelessWidget {
   const _PassCatalogue({
     required this.passes,
     required this.selectedRole,
+    required this.selectedPass,
     required this.onRoleSelected,
     required this.onSelectPass,
+    required this.onContinue,
   });
 
   final List<PassProduct> passes;
   final String selectedRole;
+  final PassProduct? selectedPass;
   final ValueChanged<String> onRoleSelected;
   final ValueChanged<PassProduct> onSelectPass;
+  final ValueChanged<PassProduct> onContinue;
 
   @override
   Widget build(BuildContext context) {
@@ -134,7 +181,13 @@ class _PassCatalogue extends StatelessWidget {
                   )
                   .toList(),
             ),
-            const SizedBox(height: 36),
+            const SizedBox(height: 16),
+            Text(
+              'Select a pass below to continue as '
+              '${selectedRole[0].toUpperCase()}${selectedRole.substring(1)}.',
+              style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
+            ),
+            const SizedBox(height: 24),
             GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -154,7 +207,9 @@ class _PassCatalogue extends StatelessWidget {
                 return _PassCard(
                   pass: pass,
                   role: selectedRole,
-                  onTap: () => onSelectPass(pass),
+                  isSelected: selectedPass?.id == pass.id,
+                  onSelect: () => onSelectPass(pass),
+                  onContinue: () => onContinue(pass),
                 );
               },
             ),
@@ -204,12 +259,16 @@ class _PassCard extends StatelessWidget {
   const _PassCard({
     required this.pass,
     required this.role,
-    required this.onTap,
+    required this.onSelect,
+    required this.onContinue,
+    required this.isSelected,
   });
 
   final PassProduct pass;
   final String role;
-  final VoidCallback onTap;
+  final VoidCallback onSelect;
+  final VoidCallback onContinue;
+  final bool isSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -220,88 +279,133 @@ class _PassCard extends StatelessWidget {
 
     final theme = Theme.of(context);
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        pass.name,
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: theme.colorScheme.onSurface,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        pass.validityLabel,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurface.withOpacity(0.64),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (pass.isEarlyBird)
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: theme.palette.heroAccent.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      'Early bird',
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        color: theme.palette.heroAccent,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            Text(
-              nairaFormat.format(pass.amountNaira),
-              style: theme.textTheme.headlineSmall?.copyWith(
-                color: theme.colorScheme.primary,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            if (usdDisplay != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 6),
-                child: Text(
-                  usdDisplay,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withOpacity(0.6),
-                  ),
-                ),
-              ),
-            const SizedBox(height: 20),
-            Expanded(
-              child: Text(
-                pass.description,
-                style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
-              ),
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: onTap,
-                child: Text(
-                  'Continue as ${role[0].toUpperCase()}${role.substring(1)}',
-                ),
-              ),
-            ),
-          ],
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: BorderSide(
+          color: isSelected
+              ? theme.colorScheme.primary
+              : theme.palette.subtleCard,
+          width: isSelected ? 2 : 1,
         ),
+      ),
+      child: InkWell(
+        onTap: onSelect,
+        borderRadius: BorderRadius.circular(24),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          pass.name,
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: theme.colorScheme.onSurface,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          pass.validityLabel,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurface
+                                .withOpacity(0.64),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (pass.isEarlyBird)
+                    Container(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: theme.palette.heroAccent.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        'Early bird',
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          color: theme.palette.heroAccent,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              Text(
+                nairaFormat.format(pass.amountNaira),
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              if (usdDisplay != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    usdDisplay,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withOpacity(0.6),
+                    ),
+                  ),
+                ),
+              const SizedBox(height: 20),
+              Expanded(
+                child: Text(
+                  pass.description,
+                  style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: onSelect,
+                      child: const Text('Select pass'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: onContinue,
+                      child: Text(
+                        'Register as ${role[0].toUpperCase()}${role.substring(1)}',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyCatalogueNotice extends StatelessWidget {
+  const _EmptyCatalogueNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: theme.palette.subtleCard,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        'No passes are currently available. Please check back soon or contact tickets@afcm.app for assistance.',
+        style: theme.textTheme.bodyMedium?.copyWith(height: 1.6),
       ),
     );
   }

@@ -3,17 +3,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/auth/application/auth_providers.dart';
+import '../features/auth/auth_redirect_page.dart';
 import '../features/auth/sign_in_page.dart';
 import '../features/passes/passes_page.dart';
 import '../features/profile/profile_page.dart';
+import '../features/registration/models/registration_flow.dart';
 import '../features/registration/registration_page.dart';
 import '../features/registration/registration_status_page.dart';
-import '../features/registration/models/registration_flow.dart';
-import '../features/ticket/my_ticket_page.dart';
 import '../features/staff/staff_attendees_page.dart';
 import '../features/staff/staff_orders_page.dart';
+import '../features/ticket/my_ticket_page.dart';
 
 enum AppRoute {
+  root('/'),
   passes('/passes'),
   register('/register'),
   registrationStatus('/register/status'),
@@ -39,6 +41,19 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: AppRoute.passes.path,
     refreshListenable: refreshAuth,
     routes: [
+      GoRoute(
+        path: AppRoute.root.path,
+        name: AppRoute.root.name,
+        builder: (context, state) {
+          final uri = state.uri;
+          final hasAuthParams = uri.queryParameters.containsKey('code') ||
+              uri.queryParameters.containsKey('refresh_token');
+          if (!hasAuthParams) {
+            return const _RootRedirector();
+          }
+          return AuthRedirectPage(uri: uri);
+        },
+      ),
       GoRoute(
         path: AppRoute.passes.path,
         name: AppRoute.passes.name,
@@ -96,7 +111,29 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       if (isLoggedIn && loggingIn) {
         return AppRoute.profile.path;
       }
+      final atRoot = state.matchedLocation == AppRoute.root.path;
+      final hasAuthParams = state.uri.queryParameters.containsKey('code') ||
+          state.uri.queryParameters.containsKey('refresh_token');
+      if (atRoot && !hasAuthParams) {
+        return AppRoute.passes.path;
+      }
       return null;
     },
   );
 });
+
+class _RootRedirector extends StatelessWidget {
+  const _RootRedirector();
+
+  @override
+  Widget build(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (context.mounted) {
+        context.goNamed(AppRoute.passes.name);
+      }
+    });
+    return const Scaffold(
+      body: Center(child: CircularProgressIndicator()),
+    );
+  }
+}
