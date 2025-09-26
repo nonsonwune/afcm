@@ -181,6 +181,8 @@ class _PassCatalogue extends StatelessWidget {
                   )
                   .toList(),
             ),
+            const SizedBox(height: 24),
+            _PassPricingTable(passes: passes),
             const SizedBox(height: 16),
             Text(
               'Select a pass below to continue as '
@@ -282,9 +284,8 @@ class _PassCard extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24),
         side: BorderSide(
-          color: isSelected
-              ? theme.colorScheme.primary
-              : theme.palette.subtleCard,
+          color:
+              isSelected ? theme.colorScheme.primary : theme.palette.subtleCard,
           width: isSelected ? 2 : 1,
         ),
       ),
@@ -313,8 +314,8 @@ class _PassCard extends StatelessWidget {
                         Text(
                           pass.validityLabel,
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurface
-                                .withOpacity(0.64),
+                            color:
+                                theme.colorScheme.onSurface.withOpacity(0.64),
                           ),
                         ),
                       ],
@@ -322,8 +323,8 @@ class _PassCard extends StatelessWidget {
                   ),
                   if (pass.isEarlyBird)
                     Container(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
                         color: theme.palette.heroAccent.withOpacity(0.12),
                         borderRadius: BorderRadius.circular(999),
@@ -406,6 +407,64 @@ class _EmptyCatalogueNotice extends StatelessWidget {
       child: Text(
         'No passes are currently available. Please check back soon or contact tickets@afcm.app for assistance.',
         style: theme.textTheme.bodyMedium?.copyWith(height: 1.6),
+      ),
+    );
+  }
+}
+
+class _PassPricingTable extends StatelessWidget {
+  const _PassPricingTable({required this.passes});
+
+  final List<PassProduct> passes;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final nairaFormat = NumberFormat.currency(symbol: '₦', decimalDigits: 2);
+    final usdFormat = NumberFormat.currency(symbol: '\$', decimalDigits: 2);
+    final sortedPasses = [...passes]
+      ..sort((a, b) => a.amountKobo.compareTo(b.amountKobo));
+
+    if (sortedPasses.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Access Badges',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 12),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: DataTable(
+                columns: const [
+                  DataColumn(label: Text('Access Badges')),
+                  DataColumn(label: Text('NGN')),
+                  DataColumn(label: Text('USD')),
+                ],
+                rows: sortedPasses.map((pass) {
+                  final usdDisplay = pass.displayAmountUsd != null
+                      ? usdFormat.format(pass.displayAmountUsd)
+                      : '—';
+                  return DataRow(cells: [
+                    DataCell(Text(pass.name)),
+                    DataCell(Text(nairaFormat.format(pass.amountNaira))),
+                    DataCell(Text(usdDisplay)),
+                  ]);
+                }).toList(),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
